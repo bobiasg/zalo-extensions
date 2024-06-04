@@ -1,11 +1,11 @@
 {
-  "name": "chrome-extension-boilerplate-react-vite",
+  "name": "zalo-extensions",
   "version": "0.0.1",
-  "description": "chrome extension boilerplate",
+  "description": "Zalo Extensions",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite.git"
+    "url": "https://github.com/bobiasg/zalo-extensions.git"
   },
   "scripts": {
     "clean": "rimraf dist && rimraf .turbo && turbo clean",
@@ -53,7 +53,7 @@
     "typescript": "5.2.2",
     "vite": "^5.2.11"
   },
-  "packageManager": "pnpm@9.1.1",
+  "packageManager": "pnpm@9.1.4",
   "engines": {
     "node": ">=18.12.0"
   }

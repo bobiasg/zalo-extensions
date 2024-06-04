@@ -22,10 +22,10 @@ const manifest = Object.assign(
      * if you want to support multiple languages, you can use the following reference
      * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Internationalization
      */
-    name: '__MSG_extensionName__',
+    name: 'Zalo Extension',
     version: packageJson.version,
-    description: '__MSG_extensionDescription__',
-    permissions: ['storage'].concat(sidePanelConfig.permissions),
+    description: 'Extension function for zalo chat',
+    permissions: ['storage', 'scripting', 'activeTab'].concat(sidePanelConfig.permissions),
     options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',
@@ -43,25 +43,23 @@ const manifest = Object.assign(
     },
     content_scripts: [
       {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+        matches: ['https://*.zalo.me/*'],
         js: ['content/index.iife.js'],
-      },
-      {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-        js: ['content-ui/index.iife.js'],
-      },
-      {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
-        css: ['content.css'], // public folder
+        run_at: 'document_idle',
+        world: 'MAIN',
       },
     ],
-    devtools_page: 'devtools/index.html',
+    // devtools_page: 'devtools/index.html',
     web_accessible_resources: [
       {
         resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
         matches: ['*://*/*'],
       },
     ],
+    host_permissions: ['https://*.zalo.me/'],
+    content_security_policy: {
+      extension_pages: "script-src 'self' ; object-src 'self'; connect-src ws://localhost:8081/",
+    },
   },
   !isFirefox && { side_panel: { ...sidePanelConfig.side_panel } },
 );
