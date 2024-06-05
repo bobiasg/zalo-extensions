@@ -4,6 +4,8 @@ import { makeEntryPointPlugin, watchRebuildPlugin } from '@chrome-extension-boil
 
 const rootDir = resolve(__dirname);
 const libDir = resolve(rootDir, 'lib');
+const zaloDir = resolve(rootDir, 'zalo');
+const utilsDir = resolve(rootDir, 'utils');
 
 const isDev = process.env.__DEV__ === 'true';
 const isProduction = !isDev;
@@ -12,6 +14,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@lib': libDir,
+      '@zalo': zaloDir,
+      '@utils': utilsDir,
     },
   },
   plugins: [isDev && watchRebuildPlugin({ refresh: true }), isDev && makeEntryPointPlugin()],
