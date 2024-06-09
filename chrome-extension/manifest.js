@@ -25,19 +25,19 @@ const manifest = Object.assign(
     name: 'Zalo Extension',
     version: packageJson.version,
     description: 'Extension function for zalo chat',
-    permissions: ['storage', 'scripting', 'activeTab'].concat(sidePanelConfig.permissions),
-    options_page: 'options/index.html',
+    permissions: ['storage', 'scripting', 'tabs'].concat(sidePanelConfig.permissions),
+    // options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',
       type: 'module',
     },
-    action: {
-      default_popup: 'popup/index.html',
-      default_icon: 'icon-34.png',
-    },
-    chrome_url_overrides: {
-      newtab: 'newtab/index.html',
-    },
+    // action: {
+    //   default_popup: 'popup/index.html',
+    //   default_icon: 'icon-34.png',
+    // },
+    // chrome_url_overrides: {
+    //   newtab: 'newtab/index.html',
+    // },
     icons: {
       128: 'icon-128.png',
     },
@@ -46,7 +46,13 @@ const manifest = Object.assign(
         matches: ['https://*.zalo.me/*'],
         js: ['content/index.iife.js'],
         run_at: 'document_idle',
-        world: 'MAIN',
+        // world: 'MAIN',
+      },
+      {
+        matches: ['<all_urls>'],
+        js: ['proxy/index.iife.js'],
+        run_at: 'document_idle',
+        // world: 'MAIN',
       },
     ],
     // devtools_page: 'devtools/index.html',

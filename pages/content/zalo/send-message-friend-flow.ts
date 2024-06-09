@@ -1,19 +1,15 @@
-import {
-  hookReactComponent,
-  hookReactComponentBySelector,
-  waitForElement,
-  waitForElementBySelector,
-} from '../utils/react-utils';
+import { waitForElement, waitForElementBySelector } from '../utils/react-utils';
 import {
   ADD_FRIEND_BTN_SELECTOR,
   FIND_FRIEND_CONTAINER,
+  FIND_FRIEND_PHONE_NUMBER_INPUT,
   PROFILE_CONTAINER_SELECTOR,
   SEND_MESSAGE_BTN_SELECTOR,
   SEND_MESSAGE_TEXT_ID,
 } from './constant';
 import { waitForUserLogined } from './zalo-utils';
 
-enum ResultSendMessageFlow {
+export enum ResultSendMessageFlow {
   NO_ADD_FRIEND_BUTTON = 'NO_ADD_FRIEND_BUTTON',
   NO_FIND_FRIEND_CONTAINER = 'NO_FIND_FRIEND_CONTAINER',
   SUCCESS = 'SUCCESS',
@@ -87,37 +83,54 @@ class ZaloSendMessageFlow {
   private async fallback(): Promise<ResultSendMessageFlow> {
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const addFriendBtn = await hookReactComponentBySelector(ADD_FRIEND_BTN_SELECTOR);
-
+      // const addFriendBtn = await hookReactComponentBySelector(ADD_FRIEND_BTN_SELECTOR);
+      // use html element below
+      // if (addFriendBtn == null) return ResultSendMessageFlow.NO_ADD_FRIEND_BUTTON;
+      // addFriendBtn.props.onClick();
+      //use html event
+      const addFriendBtn = await waitForElementBySelector(ADD_FRIEND_BTN_SELECTOR);
       if (addFriendBtn == null) return ResultSendMessageFlow.NO_ADD_FRIEND_BUTTON;
+      addFriendBtn.dispatchEvent(new Event('click', { bubbles: true }));
 
-      addFriendBtn.props.onClick();
+      // await waitForElement(FIND_FRIEND_CONTAINER);
 
-      await waitForElement(FIND_FRIEND_CONTAINER);
+      //use html element below
+      // const findFriendContainer = await hookReactComponent(FIND_FRIEND_CONTAINER);
+      // if (findFriendContainer == null) return ResultSendMessageFlow.NO_FIND_FRIEND_CONTAINER;
+      // findFriendContainer.state.phoneNumber = this.phoneNumber;
+      // findFriendContainer.submitFindFriend();
 
-      const findFriendContainer = await hookReactComponent(FIND_FRIEND_CONTAINER);
+      const findFriendContainer = await waitForElement(FIND_FRIEND_CONTAINER);
       if (findFriendContainer == null) return ResultSendMessageFlow.NO_FIND_FRIEND_CONTAINER;
-
-      findFriendContainer.state.phoneNumber = this.phoneNumber;
-      findFriendContainer.submitFindFriend();
+      // eslint-disable-next-line no-debugger
+      const phoneNumberInput = findFriendContainer.querySelector(FIND_FRIEND_PHONE_NUMBER_INPUT);
+      if (phoneNumberInput == null) return ResultSendMessageFlow.NO_FIND_FRIEND_CONTAINER;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      phoneNumberInput.value = this.phoneNumber;
+      phoneNumberInput.dispatchEvent(new Event('input', { bubbles: true }));
+      phoneNumberInput.dispatchEvent(
+        new KeyboardEvent('keypress', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
+      );
 
       //now, it has 3 status return
       // 1. no find user
       // 2. find user without friendly
       // 3. find user with friendly
-      const profileContainer = await hookReactComponentBySelector(PROFILE_CONTAINER_SELECTOR, 1);
+      //TODO profileContainer has data in memoizedProps {info :{}}
+      // use html element below
+      // const profileContainer = await hookReactComponentBySelector(PROFILE_CONTAINER_SELECTOR, 1);
+      // if (profileContainer == null) {
+      //   //no find user
+      //   return ResultSendMessageFlow.NO_FIND_USER;
+      // }
+      //console.log(profileContainer, profileContainer?.memoizedProps);
+      // use html element
+      const profileContainer = await waitForElementBySelector(PROFILE_CONTAINER_SELECTOR);
       if (profileContainer == null) {
         //no find user
         return ResultSendMessageFlow.NO_FIND_USER;
       }
-
-      //TODO profileContainer has data in memoizedProps {info :{}}
-
-      // eslint-disable-next-line no-debugger
-
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      console.log(profileContainer, profileContainer?.memoizedProps);
 
       //TODO issue: can not use onClick method, use dispatchEvent instead
       //check if has btn ""
