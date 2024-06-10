@@ -21,7 +21,9 @@ const ZaloStatus: React.FC<ZaloStatusProps> = () => {
     fetchConnectionStatus();
   }, [zaloInfo, zaloStorage.isConnected]);
 
-  const reconnectZalo = (event: MouseEvent): void => {
+  const reconnectZalo = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent> | React.KeyboardEvent<HTMLDivElement>,
+  ): void => {
     event.preventDefault();
     console.log('reconnect zalo');
     chrome.runtime.sendMessage({ type: 'reconnect-zalo' });
@@ -40,7 +42,10 @@ const ZaloStatus: React.FC<ZaloStatusProps> = () => {
         ) : (
           <div
             className="text-white p-3 text-center inline-flex items-center justify-center w-8 h-8 shadow-lg rounded-full bg-red-500 cursor-pointer"
-            onClick={reconnectZalo}>
+            onClick={reconnectZalo}
+            onKeyDown={reconnectZalo}
+            tabIndex={0}
+            role="button">
             <i className="fas fa-plug"></i>
           </div>
         )}

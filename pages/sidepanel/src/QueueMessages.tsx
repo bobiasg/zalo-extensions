@@ -24,7 +24,6 @@ const QueueMessages: React.FC = () => {
         className="flex flex-wrap -mx-3"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
-          width: '100%',
           position: 'relative',
         }}>
         {rowVirtualizer.getVirtualItems().map(virtualRow => {

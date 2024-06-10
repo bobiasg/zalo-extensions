@@ -72,7 +72,7 @@ type QueueMessageItem = {
 const queueMessages = new Map<string, QueueMessageItem>();
 
 chrome.runtime.onInstalled.addListener(() => {
-  zaloStorage.setStatus('disconnect');
+  zaloStorage.setStatus('disconnected');
 });
 
 //listen connect from content page
@@ -155,12 +155,18 @@ chrome.runtime.onConnect.addListener(port => {
   });
 });
 
+// listen message from sidepanel
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   //listen request form proxy
   if (request.type === 'reconnect-zalo') {
     chrome.tabs.query({ url: '*://chat.zalo.me/*' }, tabs => {
-      if (tabs.length > 0) {
-        chrome.tabs.reload(tabs[0].id);
+      const tab = tabs.length > 0 ? tabs[0] : null;
+      if (tab && tab.id) {
+        // Check if tab.id is defined
+        chrome.tabs.reload(tab.id);
+      } else {
+        //open new tab with zalo url
+        chrome.tabs.create({ url: 'https://chat.zalo.me/' });
       }
     });
   }
