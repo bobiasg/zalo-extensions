@@ -45,13 +45,13 @@ const manifest = Object.assign(
       {
         matches: ['https://*.zalo.me/*'],
         js: ['content/index.iife.js'],
-        run_at: 'document_idle',
+        run_at: 'document_end',
         // world: 'MAIN',
       },
       {
         matches: ['<all_urls>'],
         js: ['proxy/index.iife.js'],
-        run_at: 'document_idle',
+        run_at: 'document_end',
         // world: 'MAIN',
       },
     ],
@@ -64,7 +64,7 @@ const manifest = Object.assign(
     ],
     host_permissions: ['https://*.zalo.me/'],
     content_security_policy: {
-      extension_pages: "script-src 'self' ; object-src 'self'; connect-src ws://localhost:8081/",
+      extension_pages: "script-src 'self' ; object-src 'self'; ",
     },
   },
   !isFirefox && { side_panel: { ...sidePanelConfig.side_panel } },

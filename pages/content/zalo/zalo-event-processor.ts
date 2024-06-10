@@ -2,24 +2,7 @@ import { Observable, Subject, from, of } from 'rxjs';
 import { catchError, concatMap, map } from 'rxjs/operators';
 import { zaloSendMessage, ResultSendMessageFlow } from './send-message-friend-flow';
 import { zaloAddFriend, ResultAddFriendFlow } from './add-friend-flow';
-
-export type ZaloEventType = 'request-friend' | 'send-message';
-export type ZaloEventData = {
-  phone: string;
-  message: string;
-};
-
-export type ProcessedResult = {
-  error: boolean;
-  message?: string;
-  zaloEvent: ZaloEvent;
-};
-
-export type ZaloEvent = {
-  trackingId: string;
-  type: ZaloEventType;
-  data: ZaloEventData;
-};
+import { ZaloEvent, ProcessedResult } from '@chrome-extension-boilerplate/zalo';
 
 export function isZaloEvent(obj: unknown): obj is ZaloEvent {
   return (

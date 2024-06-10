@@ -14,20 +14,21 @@ import { useZaloEventProcessor } from '@zalo/zalo-event-processor';
 //   console.log('contacts:', contacts);
 // }, 1000 * 30);
 
-(async () => {
-  // eslint-disable-next-line no-debugger
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  // const addFriendFlowBuilder = useZaloAddFriendFlow('0931205663', 'Hi bot');
-  // await addFriendFlowBuilder.build().run();
-  // await zaloSendMessage('0948832001', 'this is bot auto send message to user by phone number');
+// eslint-disable-next-line no-debugger
+// eslint-disable-next-line react-hooks/rules-of-hooks
+// const addFriendFlowBuilder = useZaloAddFriendFlow('0931205663', 'Hi bot');
+// await addFriendFlowBuilder.build().run();
+// await zaloSendMessage('0948832001', 'this is bot auto send message to user by phone number');
 
-  const { processor, enqueue } = useZaloEventProcessor();
+// eslint-disable-next-line react-hooks/rules-of-hooks
+const { processor, enqueue } = useZaloEventProcessor();
 
+function connectToBackgroundScript(retryCount = 0) {
   // Connect to the background script
   const port = chrome.runtime.connect({ name: 'content' });
 
   //listernet event result and send back to background
-  processor.subscribe(result => {
+  const messageSubscription = processor.subscribe(result => {
     console.log('content: processed result:', result);
     port.postMessage(result);
   });
@@ -47,7 +48,24 @@ import { useZaloEventProcessor } from '@zalo/zalo-event-processor';
     // @ts-ignore
     enqueue(request);
   });
-})();
 
+  port.onDisconnect.addListener(() => {
+    console.log('content: port disconnected');
+
+    //unsubscribe
+    messageSubscription.unsubscribe();
+
+    //TODO handle reconnect
+    // Retry connection up to 3 times
+    if (retryCount < 3) {
+      console.log(`content: retrying connection (${retryCount + 1})`);
+      setTimeout(() => connectToBackgroundScript(retryCount + 1), 1000);
+    } else {
+      console.log('content: failed to reconnect after 3 attempts');
+    }
+  });
+}
+
+connectToBackgroundScript();
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

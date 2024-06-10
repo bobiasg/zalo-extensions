@@ -39,7 +39,7 @@ function zaloSendMessage(message: unknown) {
       {
         source: 'zalo_extension',
         action: 'zaloResponse',
-        message: response.message,
+        message: response,
       },
       '*',
     );

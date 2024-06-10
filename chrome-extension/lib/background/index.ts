@@ -1,4 +1,8 @@
+import 'webextension-polyfill';
+import { zaloStorage, zaloMessageStorage } from '@chrome-extension-boilerplate/zalo';
+
 console.log('background loaded');
+
 // chrome.scripting
 //   .registerContentScripts([
 //     {
@@ -60,14 +64,22 @@ console.log('background loaded');
 
 type QueueMessageItem = {
   tabId?: number;
+  data?: unknown;
+  status: 'pending' | 'sent';
   callback: (response?: unknown) => void;
 };
 
 const queueMessages = new Map<string, QueueMessageItem>();
 
+chrome.runtime.onInstalled.addListener(() => {
+  zaloStorage.setStatus('disconnect');
+});
+
 //listen connect from content page
 chrome.runtime.onConnect.addListener(port => {
   console.log('connect from content page:', port);
+  // eslint-disable-next-line no-debugger
+  zaloStorage.setStatus('connected');
 
   // if (port.name === 'content') {
   port.onMessage.addListener(message => {
@@ -83,16 +95,19 @@ chrome.runtime.onConnect.addListener(port => {
       //send response to content page
       callback(message);
       queueMessages.delete(trackingId);
+
+      zaloMessageStorage.updateMessage(trackingId, message.error ? 'error' : 'success');
     } else {
       chrome.runtime.sendMessage(message, response => {
         console.log('background: Done', message, response);
       });
     }
   });
-  // }
 
   port.onDisconnect.addListener(() => {
     console.log('disconnect from content page:', port);
+
+    zaloStorage.setStatus('disconnected');
   });
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -114,11 +129,20 @@ chrome.runtime.onConnect.addListener(port => {
         const trackingId = `${tabId}-${Date.now()}`;
         //add tracking id to data
         data.trackingId = trackingId;
+
         //store response callback
         queueMessages.set(trackingId, {
-          tabId: tabId,
+          tabId,
+          data,
+          status: 'sent', //TODO when port not available, status will be pending, and will process after port reconnected
           callback: sendResponse,
         });
+
+        zaloMessageStorage.addMessage({ ...data, status: 'pending' });
+
+        //TODO handle loss connection between content and background
+        //message should remain in queue, waiting for reconnect
+
         // Process the request from the content script
         port.postMessage(data);
 
@@ -129,4 +153,15 @@ chrome.runtime.onConnect.addListener(port => {
     // for async call sendResponse;
     return true;
   });
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  //listen request form proxy
+  if (request.type === 'reconnect-zalo') {
+    chrome.tabs.query({ url: '*://chat.zalo.me/*' }, tabs => {
+      if (tabs.length > 0) {
+        chrome.tabs.reload(tabs[0].id);
+      }
+    });
+  }
 });

@@ -1,5 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import '@src/index.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'react-perfect-scrollbar/dist/css/styles.css';
+
 import SidePanel from '@src/SidePanel';
 
 function init() {

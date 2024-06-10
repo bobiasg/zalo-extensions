@@ -1,0 +1,34 @@
+<html>
+  <head> </head>
+  <body>
+    <h1> HAHAHA </h1>
+
+    <script type="text/javascript">
+      function sendMessageToExtension(message) {
+        window.postMessage({ message: message }, '*');
+      }
+
+      window.addEventListener('message', event => {
+        // Check the event origin to ensure it comes from the content script
+        if (event.data?.source !== 'zalo_extension') {
+          return;
+        }
+        // Handle the response message
+        console.log('Response from content script:', event.data.message);
+      });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          sendMessageToExtension({
+            type: 'send-message',
+            data: {
+              phone: '0948832001',
+              message: 'TEST',
+            },
+            requestId: '0948832001',
+          });
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>
