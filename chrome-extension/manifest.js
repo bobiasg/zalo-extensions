@@ -30,6 +30,7 @@ const manifest = Object.assign(
     background: {
       service_worker: 'background.iife.js',
       type: 'module',
+      persistent: true,
     },
     // action: {
     //   default_popup: 'popup/index.html',

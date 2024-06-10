@@ -9,6 +9,7 @@ type ZaloInfo = {
 
 type ZaloStorage = BaseStorage<ZaloInfo> & {
   setStatus: (status: ZaloConnectionStatus) => Promise<void>;
+  getStatus: () => Promise<ZaloConnectionStatus>;
   isConnected: Promise<boolean>;
 };
 
@@ -30,6 +31,7 @@ export const zaloStorage: ZaloStorage = {
       status,
     }));
   },
+  getStatus: () => storage.get().then(info => info.status),
   get isConnected(): Promise<boolean> {
     return storage.get().then(info => info.status === 'connected');
   },

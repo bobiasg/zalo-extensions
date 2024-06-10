@@ -171,3 +171,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 });
+
+// this is code to prevent background script into inactive state
+setInterval(async () => {
+  const status = await zaloStorage.getStatus();
+  console.log('zalo status:', status);
+}, 5000);
