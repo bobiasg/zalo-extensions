@@ -1,3 +1,4 @@
+import { moveCursorToEnd } from '@utils/html-utils';
 import { waitForElement, waitForElementBySelector } from '../utils/react-utils';
 import {
   ADD_FRIEND_BTN_SELECTOR,
@@ -5,7 +6,8 @@ import {
   FIND_FRIEND_PHONE_NUMBER_INPUT,
   PROFILE_CONTAINER_SELECTOR,
   SEND_MESSAGE_BTN_SELECTOR,
-  SEND_MESSAGE_TEXT_ID,
+  SEND_MESSAGE_TEXT_CONTAINER_ID,
+  SEND_MESSAGE_TEXT_ID_PREFIX,
 } from './constant';
 import { waitForUserLogined } from './zalo-utils';
 
@@ -146,18 +148,53 @@ class ZaloSendMessageFlow {
 
         //find user without friendly
 
-        const messageText = await waitForElement(SEND_MESSAGE_TEXT_ID);
-        //add message
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        messageText.innerText = this.message + '\n';
-        // Trigger input event
-        messageText?.dispatchEvent(new Event('input', { bubbles: true }));
+        const messageTextContainer = await waitForElement(SEND_MESSAGE_TEXT_CONTAINER_ID);
 
-        // Trigger keydown event for Enter key
-        messageText?.dispatchEvent(
-          new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
-        );
+        let messageText: HTMLElement | null = null;
+        const messageLines = this.message.split('\n');
+        for (let i = 0; i < messageLines.length; i++) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          messageText = await waitForElement(SEND_MESSAGE_TEXT_ID_PREFIX + i);
+
+          if (messageText == null) continue;
+
+          const messageLine = messageLines[i];
+
+          //add message
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          messageText.innerHTML = messageLine.trim() == '' ? '&nbsp;' : messageLine;
+          moveCursorToEnd(messageText);
+          // Trigger input event
+          messageText.dispatchEvent(new Event('input', { bubbles: true }));
+          // messageTextContainer.dispatchEvent(new Event('input', { bubbles: true }));
+
+          if (i < messageLines.length - 1) {
+            // setTimeout(() => {
+            // Trigger keydown event for Enter key
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            messageText.dispatchEvent(
+              new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, which: 13, keyCode: 13 }),
+            );
+            messageText.blur();
+            // messageTextContainer?.blur();
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            // }, 1000);
+          }
+        }
+
+        if (messageText instanceof HTMLElement) {
+          // Trigger keydown event for Enter key
+          // setTimeout(() => {
+          // console.log(`send ........`);
+          messageText.dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
+          );
+          // }, 1000);
+        }
       }
 
       return ResultSendMessageFlow.SUCCESS;

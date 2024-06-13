@@ -7,6 +7,7 @@ import {
   ProcessedResult,
   ZaloEvent,
   ZaloMessage,
+  ZaloMessageStorage,
 } from './MessageStorage';
 
 export {
@@ -14,6 +15,7 @@ export {
   useZaloStorage,
   zaloMessageStorage,
   useZaloMessageStorage,
+  type ZaloMessageStorage,
   type ZaloEventType,
   type ZaloEventData,
   type ProcessedResult,

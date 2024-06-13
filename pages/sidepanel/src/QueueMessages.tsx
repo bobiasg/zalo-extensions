@@ -6,7 +6,7 @@ import Message from './Message';
 
 const QueueMessages: React.FC = () => {
   const parentRef = React.useRef<HTMLElement | null>(null);
-  const { zaloMessages } = useZaloMessageStorage();
+  const { zaloMessages, zaloMessageStorage } = useZaloMessageStorage();
 
   const messages = Object.values(zaloMessages.messages);
 
@@ -17,16 +17,27 @@ const QueueMessages: React.FC = () => {
     estimateSize: () => 75,
   });
 
+  const clearMessages = () => {
+    zaloMessageStorage.clear();
+  };
+
   return (
     //
     <PerfectScrollbar options={{ suppressScrollX: true }} containerRef={ref => (parentRef.current = ref)}>
       {/* <div className="h-full overflow-auto" ref={parentRef}> */}
       <div
-        className="flex flex-wrap -mx-3"
+        className="flex flex-wrap -mx-3 group"
         style={{
           height: `${rowVirtualizer.getTotalSize()}px`,
           position: 'relative',
         }}>
+        <div className="px-3 py-1 group-hover:visible invisible z-10 absolute top-1 right-2 ">
+          <button className="px-2  text-sm font-normal bg-gray-50 text-slate-500   rounded-1 " onClick={clearMessages}>
+            Clear
+            <i className="fas fa-trash ml-2"></i>
+          </button>
+        </div>
+
         {rowVirtualizer.getVirtualItems().map(virtualRow => {
           const message = messages[virtualRow.index] as ZaloMessage | null;
 

@@ -24,22 +24,21 @@ export type ZaloMessage = ZaloEvent & {
 };
 
 type ZaloMessages = {
-  messages: {
-    [id: string]: ZaloMessage;
-  };
+  messages: ZaloMessage[];
 };
 
-type ZaloMessageStorage = BaseStorage<ZaloMessages> & {
+export type ZaloMessageStorage = BaseStorage<ZaloMessages> & {
   addMessage: (message: ZaloMessage) => Promise<void>;
   updateMessage: (trackingId: string, status: 'success' | 'error') => Promise<void>;
   getMessages: () => Promise<ZaloMessage[]>;
   getMessage: (trackingId: string) => Promise<ZaloMessage | undefined>;
   getIds: () => Promise<string[]>;
+  clear: () => Promise<void>;
 };
 
 const storage = createStorage<ZaloMessages>(
   'zalo-messages',
-  { messages: {} },
+  { messages: [] },
   {
     storageType: StorageType.Local,
     liveUpdate: true,
@@ -52,31 +51,33 @@ export const zaloMessageStorage: ZaloMessageStorage = {
   addMessage: async (message: ZaloMessage) => {
     await storage.set(info => ({
       ...info,
-      messages: {
-        [message.trackingId]: message,
-        ...info.messages,
-      },
+      messages: [message, ...info.messages],
     }));
   },
   updateMessage: async (trackingId: string, status: 'success' | 'error') => {
     await storage.set(info => {
-      const updatedMessages = {
-        ...info.messages,
-        [trackingId]: { ...info.messages[trackingId], status },
-      };
+      const updatedMessages = info.messages.map(message => {
+        if (message.trackingId === trackingId) {
+          return { ...message, status };
+        }
+        return message;
+      });
 
       return { ...info, messages: updatedMessages };
     });
   },
 
   getMessages(): Promise<ZaloMessage[]> {
-    return storage.get().then(info => Object.values(info.messages));
+    return storage.get().then(info => info.messages);
   },
   getMessage(trackingId: string): Promise<ZaloMessage | undefined> {
-    return storage.get().then(info => info.messages[trackingId]);
+    return storage.get().then(info => info.messages.find(message => message.trackingId === trackingId));
   },
   getIds(): Promise<string[]> {
-    return storage.get().then(info => Object.keys(info.messages));
+    return storage.get().then(info => info.messages.map(message => message.trackingId));
+  },
+  clear(): Promise<void> {
+    return storage.set(info => ({ messages: [] }));
   },
 };
 

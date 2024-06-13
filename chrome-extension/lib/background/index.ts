@@ -3,65 +3,7 @@ import { zaloStorage, zaloMessageStorage } from '@chrome-extension-boilerplate/z
 
 console.log('background loaded');
 
-// chrome.scripting
-//   .registerContentScripts([
-//     {
-//       id: 'content',
-//       matches: ['https://*.zalo.me/*'],
-//       js: ['content/index.iife.js'],
-//       runAt: 'document_idle',
-//       // eslint-disable-next-line
-//       // @ts-ignore
-//       world: chrome.scripting.ExecutionWorld.MAIN,
-//     },
-//   ])
-//   .then(() => console.log('zalo registered'))
-//   .catch(error => console.error(error));
-
-// chrome.action.onClicked.addListener(tab => {
-//   chrome.scripting
-//     .executeScript({
-//       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-//       // @ts-ignore
-//       target: { tabId: tab.id },
-//       files: ['zalo/index.iife.js'],
-//     })
-//     .then(() => console.log('zalo registered'))
-//     .catch(error => console.error(error));
-// });
-
-// chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
-//   if (req.type === 'github-account') {
-//     chrome.storage.sync.get(GITHUB_ACCOUNT_KEY).then(result => {
-//       sendResponse(result);
-//     })
-//   }
-//   return true;
-// })
-
-// // Get the extension ID
-// const extensionId = chrome.runtime.id;
-// console.log('Extension ID:', extensionId);
-
-// //listen tab created and send extensionId
-// chrome.tabs.onCreated.addListener(tab => {
-//   console.log(tab);
-
-//   const message = {
-//     message: 'Connect from Zalo extentions',
-//     extensionId: extensionId,
-//   };
-//   chrome.tabs.sendMessage(tab.id ?? 0, message, response => {});
-// });
-
-// //listen message from tab
-// chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {
-//   console.log(request);
-
-//   // Send a response
-//   sendResponse({ farewell: 'Goodbye from the background script!' });
-// });
-
+// TODO when extension reload ???
 type QueueMessageItem = {
   tabId?: number;
   data?: unknown;
@@ -71,46 +13,40 @@ type QueueMessageItem = {
 
 const queueMessages = new Map<string, QueueMessageItem>();
 
-chrome.runtime.onInstalled.addListener(() => {
-  zaloStorage.setStatus('disconnected');
-});
+// =========================================================================
 
 //listen connect from content page
-chrome.runtime.onConnect.addListener(port => {
+function handleConnect(port: chrome.runtime.Port) {
   console.log('connect from content page:', port);
   // eslint-disable-next-line no-debugger
   zaloStorage.setStatus('connected');
 
-  // if (port.name === 'content') {
-  port.onMessage.addListener(message => {
-    // eslint-disable-next-line no-debugger
-    console.log('background: received message from content:', message);
-    // Process the message...
-    const trackingId = message.zaloEvent.trackingId;
-    // get sendResponse from queue
-    if (trackingId && queueMessages.has(trackingId)) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { tabId, callback } = queueMessages.get(trackingId) as QueueMessageItem;
+  if (port.name === 'content') {
+    // add listernet for processing message from content. it is result of zalo request
+    port.onMessage.addListener(processContentMessage);
 
-      //send response to content page
-      callback(message);
-      queueMessages.delete(trackingId);
+    const handleZaloRequest = processZaloRequest(port);
+    // add listener for message
+    chrome.runtime.onMessage.addListener(handleZaloRequest);
 
-      zaloMessageStorage.updateMessage(trackingId, message.error ? 'error' : 'success');
-    } else {
-      chrome.runtime.sendMessage(message, response => {
-        console.log('background: Done', message, response);
-      });
-    }
-  });
+    // clear listerner on disconnect
+    port.onDisconnect.addListener(() => {
+      console.log('disconnect from content page:', port);
 
-  port.onDisconnect.addListener(() => {
-    console.log('disconnect from content page:', port);
+      port.onMessage.removeListener(processContentMessage);
+      chrome.runtime.onMessage.removeListener(handleZaloRequest);
 
-    zaloStorage.setStatus('disconnected');
-  });
+      zaloStorage.setStatus('disconnected');
+    });
+  }
+}
 
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+function processZaloRequest(
+  port: chrome.runtime.Port,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): (message: any, sender: chrome.runtime.MessageSender, sendResponse: (response?: any) => void) => void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (request, sender, sendResponse) => {
     //listen request form proxy
     if (request.action === 'zaloRequest') {
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -149,14 +85,44 @@ chrome.runtime.onConnect.addListener(port => {
         return true;
       });
     }
-
     // for async call sendResponse;
     return true;
-  });
+  };
+}
+
+// function process message from content script, usually is zalo processing result
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function processContentMessage(message: any): void {
+  // eslint-disable-next-line no-debugger
+  console.log('background: received message from content:', message);
+  // Process the message...
+  const trackingId = message.zaloEvent.trackingId;
+  // get sendResponse from queue
+  if (trackingId && queueMessages.has(trackingId)) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { tabId, callback } = queueMessages.get(trackingId) as QueueMessageItem;
+
+    //send response to content page
+    callback(message);
+    queueMessages.delete(trackingId);
+
+    zaloMessageStorage.updateMessage(trackingId, message.error ? 'error' : 'success');
+  } else {
+    chrome.runtime.sendMessage(message, response => {
+      console.log('background: Done', message, response);
+    });
+  }
+}
+// events ==================================================================
+
+chrome.runtime.onInstalled.addListener(() => {
+  zaloStorage.setStatus('disconnected');
 });
 
+chrome.runtime.onConnect.addListener(handleConnect);
+
 // listen message from sidepanel
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(request => {
   //listen request form proxy
   if (request.type === 'reconnect-zalo') {
     chrome.tabs.query({ url: '*://chat.zalo.me/*' }, tabs => {
@@ -171,6 +137,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 });
+
+//===========================================================
+
+//===========================================================
 
 // this is code to prevent background script into inactive state
 setInterval(async () => {

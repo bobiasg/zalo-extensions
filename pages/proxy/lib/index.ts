@@ -55,7 +55,6 @@ window.addEventListener('message', event => {
   }
 
   const message = event.data.message;
-  console.log(message);
 
   if (isZaloEvent(message)) {
     zaloSendMessage(message);
