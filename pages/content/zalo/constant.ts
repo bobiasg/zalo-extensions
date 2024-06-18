@@ -9,8 +9,9 @@ export const ADD_NEW_FRIEND_BTN_SELECTOR =
 export const ADD_NEW_FRIEND_MESSAGE_SELECTOR = '[data-id="txt_AddFrd_Msg"]';
 export const SEND_REQUEST_ADD_NEW_FRIEND_BTN_SELECTOR = '[data-id="btn_AddFrd_Add"]';
 export const SEND_MESSAGE_BTN_SELECTOR =
-  PROFILE_CONTAINER_SELECTOR + ' div.pi-primary-action-section div.btn-secondary';
+  PROFILE_CONTAINER_SELECTOR + ' div.pi-primary-action-section div.btn-secondary div';
 export const SEND_MESSAGE_TEXT_CONTAINER_ID = 'richInput';
 export const SEND_MESSAGE_TEXT_ID = 'input_line_0';
 export const SEND_MESSAGE_TEXT_ID_PREFIX = 'input_line_';
+export const SEND_BTN_SELECTOR = '.normal-buttons-group [icon="Sent-msg_24_Line"]';
 //('input_line_0'); // 'chat-input-container-id';

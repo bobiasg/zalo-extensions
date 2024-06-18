@@ -25,7 +25,7 @@ const manifest = Object.assign(
     name: 'Zalo Extension',
     version: packageJson.version,
     description: 'Extension function for zalo chat',
-    permissions: ['storage', 'scripting', 'tabs'].concat(sidePanelConfig.permissions),
+    permissions: ['storage', 'scripting', 'tabs', 'activeTab'].concat(sidePanelConfig.permissions),
     // options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',

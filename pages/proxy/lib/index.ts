@@ -1,3 +1,5 @@
+import { offRequestAnimationFrame } from './html-utils';
+
 interface ProxyRequest {
   action: string;
   data: unknown;

@@ -3,20 +3,22 @@ import { catchError, concatMap, map } from 'rxjs/operators';
 import { zaloSendMessage, ResultSendMessageFlow } from './send-message-friend-flow';
 import { zaloAddFriend, ResultAddFriendFlow } from './add-friend-flow';
 import { ZaloEvent, ProcessedResult } from '@chrome-extension-boilerplate/zalo';
+import { ResultInitChatModeFlow, initChatMode } from './init-chat-mode-flow';
 
 export function isZaloEvent(obj: unknown): obj is ZaloEvent {
   return (
     typeof obj === 'object' &&
     obj !== null &&
     'type' in obj &&
-    'data' in obj &&
-    (obj.type === 'request-friend' || obj.type === 'send-message') &&
-    typeof obj.data === 'object' &&
-    obj.data !== null &&
-    'phone' in obj.data &&
-    'message' in obj.data &&
-    typeof obj.data.phone === 'string' &&
-    typeof obj.data.message === 'string'
+    (obj.type === 'request-friend' || obj.type === 'send-message' || obj.type === 'init-chat-mode') &&
+    ('data' in obj === false ||
+      (typeof obj.data === 'object' &&
+        obj.data !== null &&
+        'phone' in obj.data &&
+        'message' in obj.data &&
+        typeof obj.data.phone === 'string' &&
+        typeof obj.data.message === 'string')) &&
+    ('trackingId' in obj === false || typeof obj.trackingId === 'string')
   );
 }
 
@@ -30,7 +32,7 @@ export class ZaloEventProcessor {
       concatMap(zaloEvent => {
         switch (zaloEvent.type) {
           case 'request-friend':
-            return from(zaloAddFriend(zaloEvent.data.phone, zaloEvent.data.message)).pipe(
+            return from(zaloAddFriend(zaloEvent.data?.phone, zaloEvent.data?.message)).pipe(
               map(result => ({
                 error: result !== ResultAddFriendFlow.SUCCESS,
                 message: result == ResultAddFriendFlow.SUCCESS ? undefined : (result as string),
@@ -42,10 +44,22 @@ export class ZaloEventProcessor {
               }),
             );
           case 'send-message':
-            return from(zaloSendMessage(zaloEvent.data.phone, zaloEvent.data.message)).pipe(
+            return from(zaloSendMessage(zaloEvent.data?.phone, zaloEvent.data?.message)).pipe(
               map(result => ({
                 error: result !== ResultSendMessageFlow.SUCCESS,
                 message: result == ResultSendMessageFlow.SUCCESS ? undefined : (result as string),
+                zaloEvent,
+              })),
+              catchError(error => {
+                //TODO log service
+                return of({ error: true, message: error.message, zaloEvent });
+              }),
+            );
+          case 'init-chat-mode':
+            return from(initChatMode()).pipe(
+              map(result => ({
+                error: result !== ResultInitChatModeFlow.SUCCESS,
+                message: result == ResultInitChatModeFlow.SUCCESS ? undefined : (result as string),
                 zaloEvent,
               })),
               catchError(error => {

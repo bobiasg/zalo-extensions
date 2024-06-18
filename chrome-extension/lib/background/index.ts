@@ -1,8 +1,6 @@
 import 'webextension-polyfill';
 import { zaloStorage, zaloMessageStorage } from '@chrome-extension-boilerplate/zalo';
 
-console.log('background loaded');
-
 // TODO when extension reload ???
 type QueueMessageItem = {
   tabId?: number;
@@ -11,29 +9,37 @@ type QueueMessageItem = {
   callback: (response?: unknown) => void;
 };
 
+let zaloPort: chrome.runtime.Port | null = null;
 const queueMessages = new Map<string, QueueMessageItem>();
-
 // =========================================================================
 
 //listen connect from content page
 function handleConnect(port: chrome.runtime.Port) {
   console.log('connect from content page:', port);
-  // eslint-disable-next-line no-debugger
-  zaloStorage.setStatus('connected');
 
   if (port.name === 'content') {
-    // add listernet for processing message from content. it is result of zalo request
-    port.onMessage.addListener(processContentMessage);
+    zaloPort = port;
 
-    const handleZaloRequest = processZaloRequest(port);
+    // eslint-disable-next-line no-debugger
+    zaloStorage.setStatus('connected');
+
+    // //init chat mode
+    // zaloPort.postMessage({
+    //   type: 'init-chat-mode',
+    // });
+
+    // add listernet for processing message from content. it is result of zalo request
+    zaloPort.onMessage.addListener(processContentMessage);
+
+    const handleZaloRequest = processZaloRequest(zaloPort);
     // add listener for message
     chrome.runtime.onMessage.addListener(handleZaloRequest);
 
     // clear listerner on disconnect
-    port.onDisconnect.addListener(() => {
-      console.log('disconnect from content page:', port);
+    zaloPort.onDisconnect.addListener(() => {
+      console.log('disconnect from content page:', zaloPort);
 
-      port.onMessage.removeListener(processContentMessage);
+      zaloPort?.onMessage.removeListener(processContentMessage);
       chrome.runtime.onMessage.removeListener(handleZaloRequest);
 
       zaloStorage.setStatus('disconnected');
@@ -137,6 +143,29 @@ chrome.runtime.onMessage.addListener(request => {
     });
   }
 });
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url.includes('chat.zalo.me')) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: functionToInject,
+      world: 'MAIN',
+    });
+  }
+});
+
+//TODO wip should on off requestAnimationFrame by send message between content script and web page with window.sendMessage
+function functionToInject() {
+  const customRequestAnimationFrame = function (callback: TimerHandler) {
+    console.log('Custom requestAnimationFrame called');
+    return window.setTimeout(callback, 1000 / 60); // Example: fallback to setTimeout with 60fps
+  };
+
+  console.log('This is a Zalo chat page.');
+  window.requestAnimationFrame = customRequestAnimationFrame;
+
+  console.log(window);
+}
 
 //===========================================================
 

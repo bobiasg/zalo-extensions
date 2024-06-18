@@ -1,15 +1,18 @@
-import { moveCursorToEnd } from '@utils/html-utils';
+// import { moveCursorToEnd } from '@utils/html-utils';
+import { offRequestAnimationFrame, onRequestAnimationFrame } from '@utils/html-utils';
 import { waitForElement, waitForElementBySelector } from '../utils/react-utils';
 import {
   ADD_FRIEND_BTN_SELECTOR,
   FIND_FRIEND_CONTAINER,
   FIND_FRIEND_PHONE_NUMBER_INPUT,
   PROFILE_CONTAINER_SELECTOR,
+  SEND_BTN_SELECTOR,
   SEND_MESSAGE_BTN_SELECTOR,
   SEND_MESSAGE_TEXT_CONTAINER_ID,
-  SEND_MESSAGE_TEXT_ID_PREFIX,
+  // SEND_MESSAGE_TEXT_ID_PREFIX,
 } from './constant';
 import { waitForUserLogined } from './zalo-utils';
+import { onErrorResumeNextWith } from 'rxjs';
 
 export enum ResultSendMessageFlow {
   NO_ADD_FRIEND_BUTTON = 'NO_ADD_FRIEND_BUTTON',
@@ -83,6 +86,9 @@ class ZaloSendMessageFlow {
   }
 
   private async fallback(): Promise<ResultSendMessageFlow> {
+    //fix issue: when zalo tab not active, container SEND_MESSAGE_TEXT_CONTAINER_ID does not appear
+    // offRequestAnimationFrame();
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       // const addFriendBtn = await hookReactComponentBySelector(ADD_FRIEND_BTN_SELECTOR);
@@ -144,58 +150,89 @@ class ZaloSendMessageFlow {
       } else {
         //TODO issue when use onClick, modal close with nothing
         // sendMessageBtn.props.onClick(new Event('click', { bubbles: true }));
-        sendMessageBtn.dispatchEvent(new Event('click', { bubbles: true }));
+
+        // console.log(`send message btn: `, sendMessageBtn);
+        sendMessageBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
         //find user without friendly
 
         const messageTextContainer = await waitForElement(SEND_MESSAGE_TEXT_CONTAINER_ID);
 
-        let messageText: HTMLElement | null = null;
-        const messageLines = this.message.split('\n');
-        for (let i = 0; i < messageLines.length; i++) {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          messageText = await waitForElement(SEND_MESSAGE_TEXT_ID_PREFIX + i);
+        const clipboardData = new DataTransfer();
+        const dataType = 'text/plain';
+        clipboardData.setData(dataType, this.message);
+        const clipboardEvent = new ClipboardEvent('paste', {
+          clipboardData,
+          bubbles: true,
+          composed: true,
+          // dataType,
+          // data
+        });
+        // messageText.dispatchEvent(clipboardEvent);
+        messageTextContainer?.dispatchEvent(clipboardEvent);
 
-          if (messageText == null) continue;
+        const sendBtn = await waitForElementBySelector(SEND_BTN_SELECTOR);
 
-          const messageLine = messageLines[i];
+        sendBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-          //add message
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          messageText.innerHTML = messageLine.trim() == '' ? '&nbsp;' : messageLine;
-          moveCursorToEnd(messageText);
-          // Trigger input event
-          messageText.dispatchEvent(new Event('input', { bubbles: true }));
-          // messageTextContainer.dispatchEvent(new Event('input', { bubbles: true }));
+        // Dispatch the event to the element
+        // document.dispatchEvent(clipboardEvent);
+        // console.log(clipboardEvent);
+        //   let messageText: HTMLElement | null = null;
+        //   const messageLines = this.message.split('\n');
+        //   for (let i = 0; i < messageLines.length; i++) {
+        //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //     // @ts-ignore
+        //     messageText = await waitForElement(SEND_MESSAGE_TEXT_ID_PREFIX + i);
 
-          if (i < messageLines.length - 1) {
-            // setTimeout(() => {
-            // Trigger keydown event for Enter key
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            messageText.dispatchEvent(
-              new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, which: 13, keyCode: 13 }),
-            );
-            messageText.blur();
-            // messageTextContainer?.blur();
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            // }, 1000);
-          }
-        }
+        //     if (messageText == null) continue;
 
-        if (messageText instanceof HTMLElement) {
-          // Trigger keydown event for Enter key
-          // setTimeout(() => {
-          // console.log(`send ........`);
-          messageText.dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
-          );
-          // }, 1000);
-        }
+        //     const messageLine = messageLines[i];
+
+        //     // console.log(messageLine);
+        //     //add message
+        //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //     // @ts-ignore
+        //     messageText.innerHTML = messageLine.trim() == '' ? '&nbsp;' : messageLine;
+        //     moveCursorToEnd(messageText);
+        //     // Trigger input event
+        //     messageText.dispatchEvent(new Event('input', { bubbles: true }));
+        //     // messageTextContainer.dispatchEvent(new Event('input', { bubbles: true }));
+
+        //     if (i < messageLines.length - 1) {
+        //       setTimeout(() => {
+        //         // Trigger keydown event for Enter key
+        //         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //         // @ts-ignore
+
+        //         messageText.dispatchEvent(
+        //           new KeyboardEvent('keydown', { key: 'Enter', shiftKey: true, bubbles: true, which: 13, keyCode: 13 }),
+        //         );
+        //         messageText?.blur();
+
+        //         const innerMessageTexts = messageText?.querySelectorAll('span');
+        //         console.log(innerMessageTexts);
+
+        //         console.log(`fire keydown event`, messageText);
+        //         // messageTextContainer?.blur();
+        //         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        //         // @ts-ignore
+        //       }, 1000);
+        //     }
+        //   }
+
+        //   if (messageText instanceof HTMLElement) {
+        //     // Trigger keydown event for Enter key
+        //     // setTimeout(() => {
+        //     // console.log(`send ........`);
+        //     messageText.dispatchEvent(
+        //       new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
+        //     );
+        //     // }, 1000);
+        //   }
       }
+
+      // onRequestAnimationFrame();
 
       return ResultSendMessageFlow.SUCCESS;
     } catch (error) {

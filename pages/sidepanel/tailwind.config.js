@@ -8,6 +8,11 @@ module.exports = {
   presets: [],
   darkMode: 'class',
   theme: {
+    extend: {
+      transitionDelay: {
+        '2s': '2s',
+      },
+    },
     screens: {
       sm: '576px',
       'sm-max': { max: '576px' },

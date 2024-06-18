@@ -31,8 +31,10 @@ const QueueMessages: React.FC = () => {
           height: `${rowVirtualizer.getTotalSize()}px`,
           position: 'relative',
         }}>
-        <div className="px-3 py-1 group-hover:visible invisible z-10 absolute top-1 right-2 ">
-          <button className="px-2  text-sm font-normal bg-gray-50 text-slate-500   rounded-1 " onClick={clearMessages}>
+        <div className="transition delay-2s px-3 py-1 group-hover:visible invisible z-10 absolute top-1 right-2 ">
+          <button
+            className="px-2   text-size-base font-normal bg-gray-50 text-slate-500   rounded-1 "
+            onClick={clearMessages}>
             Clear
             <i className="fas fa-trash ml-2"></i>
           </button>
