@@ -145,7 +145,7 @@ chrome.runtime.onMessage.addListener(request => {
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url.includes('chat.zalo.me')) {
+  if (changeInfo.status === 'complete' && tab.url?.includes('chat.zalo.me')) {
     chrome.scripting.executeScript({
       target: { tabId: tabId },
       func: functionToInject,
@@ -161,10 +161,7 @@ function functionToInject() {
     return window.setTimeout(callback, 1000 / 60); // Example: fallback to setTimeout with 60fps
   };
 
-  console.log('This is a Zalo chat page.');
   window.requestAnimationFrame = customRequestAnimationFrame;
-
-  console.log(window);
 }
 
 //===========================================================

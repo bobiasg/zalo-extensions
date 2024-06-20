@@ -1,7 +1,7 @@
 import { useStorageSuspense } from '@chrome-extension-boilerplate/shared';
 import { BaseStorage, StorageType, createStorage } from '@chrome-extension-boilerplate/storage';
 
-export type ZaloEventType = 'request-friend' | 'send-message';
+export type ZaloEventType = 'request-friend' | 'send-message' | 'init-chat-mode';
 export type ZaloEventData = {
   phone: string;
   message: string;

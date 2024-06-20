@@ -5,21 +5,42 @@ import { zaloAddFriend, ResultAddFriendFlow } from './add-friend-flow';
 import { ZaloEvent, ProcessedResult } from '@chrome-extension-boilerplate/zalo';
 import { ResultInitChatModeFlow, initChatMode } from './init-chat-mode-flow';
 
+// export function isZaloEvent(obj: unknown): obj is ZaloEvent {
+//   return (
+//     typeof obj === 'object' &&
+//     obj !== null &&
+//     'type' in obj &&
+//     (obj.type === 'request-friend' || obj.type === 'send-message' || obj.type === 'init-chat-mode') &&
+//     ('data' in obj === false ||
+//       (typeof obj.data === 'object' &&
+//         obj.data !== null &&
+//         'phone' in obj.data &&
+//         'message' in obj.data &&
+//         typeof obj.data.phone === 'string' &&
+//         typeof obj.data.message === 'string')) &&
+//     ('trackingId' in obj === false || typeof obj.trackingId === 'string')
+//   );
+// }
+
 export function isZaloEvent(obj: unknown): obj is ZaloEvent {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj &&
-    (obj.type === 'request-friend' || obj.type === 'send-message' || obj.type === 'init-chat-mode') &&
-    ('data' in obj === false ||
-      (typeof obj.data === 'object' &&
-        obj.data !== null &&
-        'phone' in obj.data &&
-        'message' in obj.data &&
-        typeof obj.data.phone === 'string' &&
-        typeof obj.data.message === 'string')) &&
-    ('trackingId' in obj === false || typeof obj.trackingId === 'string')
-  );
+  if (typeof obj === 'object' && obj !== null) {
+    const possibleZaloEvent = obj as Partial<ZaloEvent> & Record<string, unknown>;
+    return (
+      'type' in possibleZaloEvent &&
+      (possibleZaloEvent.type === 'request-friend' ||
+        possibleZaloEvent.type === 'send-message' ||
+        possibleZaloEvent.type === 'init-chat-mode') &&
+      ('data' in possibleZaloEvent === false ||
+        (typeof possibleZaloEvent.data === 'object' &&
+          possibleZaloEvent.data !== null &&
+          'phone' in possibleZaloEvent.data &&
+          'message' in possibleZaloEvent.data &&
+          typeof possibleZaloEvent.data.phone === 'string' &&
+          typeof possibleZaloEvent.data.message === 'string')) &&
+      ('trackingId' in possibleZaloEvent === false || typeof possibleZaloEvent.trackingId === 'string')
+    );
+  }
+  return false;
 }
 
 export class ZaloEventProcessor {

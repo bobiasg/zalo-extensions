@@ -30,7 +30,7 @@ export async function hookReactComponentBySelector(selector: string, traverseUp 
   return null;
 }
 
-export function waitForElement(id: string, timeout = 5000): Promise<HTMLElement | null> {
+export function waitForElement(id: string, timeout = 5000): Promise<HTMLElement> {
   return new Promise((resolve, reject) => {
     let counter = 0;
     const interval = setInterval(() => {
@@ -47,7 +47,7 @@ export function waitForElement(id: string, timeout = 5000): Promise<HTMLElement 
   });
 }
 
-export function waitForElementBySelector(selector: string, timeout = 5000): Promise<HTMLElement | null> {
+export function waitForElementBySelector(selector: string, timeout = 5000): Promise<HTMLElement> {
   return new Promise((resolve, reject) => {
     let counter = 0;
     const interval = setInterval(() => {

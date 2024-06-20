@@ -74,15 +74,139 @@ class ZaloSendMessageFlow {
   async run(): Promise<ResultSendMessageFlow> {
     if (!this.phoneNumber) return ResultSendMessageFlow.NO_FIND_USER;
 
+    let isSuccess: boolean = false;
+
     // eslint-disable-next-line no-debugger
     await waitForUserLogined();
 
     //TODO get friend from contact list
+    const existsFriend =
+      (await this.openChatBoxForFriend(this.phoneNumber)) || (await this.fallbackToFindFriend(this.phoneNumber));
+
+    if (existsFriend) {
+      isSuccess = await this.sendMessageToFriend(this.message);
+    }
+
+    return isSuccess ? ResultSendMessageFlow.SUCCESS : ResultSendMessageFlow.FAILURE;
 
     //=========================================================================================================
 
     //when not in contact list, follow fallback
-    return this.fallback();
+    // return this.fallback();
+  }
+
+  private async openChatBoxForFriend(phoneNumber: string): Promise<boolean> {
+    // offRequestAnimationFrame();
+
+    let result: boolean = false;
+
+    try {
+      const searchFriendInput = (await waitForElement('contact-search-input')) as HTMLInputElement;
+      searchFriendInput.value = phoneNumber;
+      searchFriendInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      await waitForElementBySelector('[class="item-search__title"]');
+      const searchResultList = await waitForElement('global_search_list');
+      //get first item has class 'conv-item'
+      const firstItem = searchResultList.querySelector('.conv-item');
+      //TODO should check phone number again to make sure select right person
+
+      //trigger click event
+      if (firstItem) {
+        firstItem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        result = true;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    // onRequestAnimationFrame();
+
+    return result;
+  }
+
+  private async fallbackToFindFriend(phoneNumber: string): Promise<boolean> {
+    // offRequestAnimationFrame();
+
+    let result: boolean = false;
+
+    try {
+      //reset search friend input
+      const searchFriendInput = (await waitForElement('contact-search-input')) as HTMLInputElement;
+      searchFriendInput.value = '';
+      searchFriendInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      // display event esc key
+      searchFriendInput.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, keyCode: 27, which: 27 }),
+      );
+
+      //get add friend button
+      const addFriendBtn = await waitForElementBySelector(ADD_FRIEND_BTN_SELECTOR);
+
+      addFriendBtn.dispatchEvent(new Event('click', { bubbles: true }));
+
+      const findFriendContainer = await waitForElement(FIND_FRIEND_CONTAINER);
+
+      // eslint-disable-next-line no-debugger
+      const phoneNumberInput = findFriendContainer.querySelector(FIND_FRIEND_PHONE_NUMBER_INPUT) as HTMLInputElement;
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      phoneNumberInput.value = phoneNumber;
+      phoneNumberInput.dispatchEvent(new Event('input', { bubbles: true }));
+      phoneNumberInput.dispatchEvent(
+        new KeyboardEvent('keypress', { key: 'Enter', bubbles: true, which: 13, keyCode: 13 }),
+      );
+
+      //now, it has 3 status return
+      // 1. no find user
+      // 2. find user without friendly
+      // 3. find user with friendly
+
+      await waitForElementBySelector(PROFILE_CONTAINER_SELECTOR);
+
+      const sendMessageBtn = await waitForElementBySelector(SEND_MESSAGE_BTN_SELECTOR);
+      sendMessageBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      result = true;
+    } catch (error) {
+      //TODO send error to server
+      console.error(error);
+    }
+
+    // onRequestAnimationFrame();
+
+    return result;
+  }
+
+  private async sendMessageToFriend(message: string): Promise<boolean> {
+    let result: boolean = false;
+
+    try {
+      const messageTextContainer = await waitForElement(SEND_MESSAGE_TEXT_CONTAINER_ID);
+
+      const clipboardData = new DataTransfer();
+      const dataType = 'text/plain';
+      clipboardData.setData(dataType, message);
+      const clipboardEvent = new ClipboardEvent('paste', {
+        clipboardData,
+        bubbles: true,
+        composed: true,
+        // dataType,
+        // data
+      });
+      // messageText.dispatchEvent(clipboardEvent);
+      messageTextContainer?.dispatchEvent(clipboardEvent);
+
+      const sendBtn = await waitForElementBySelector(SEND_BTN_SELECTOR);
+
+      sendBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      result = true;
+    } catch (error) {
+      console.error(error);
+    }
+
+    return result;
   }
 
   private async fallback(): Promise<ResultSendMessageFlow> {
