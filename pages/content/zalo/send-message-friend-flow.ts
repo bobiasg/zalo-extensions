@@ -1,5 +1,5 @@
 // import { moveCursorToEnd } from '@utils/html-utils';
-import { offRequestAnimationFrame, onRequestAnimationFrame } from '@utils/html-utils';
+// import { offRequestAnimationFrame, onRequestAnimationFrame } from '@utils/html-utils';
 import { waitForElement, waitForElementBySelector } from '../utils/react-utils';
 import {
   ADD_FRIEND_BTN_SELECTOR,
@@ -12,7 +12,6 @@ import {
   // SEND_MESSAGE_TEXT_ID_PREFIX,
 } from './constant';
 import { waitForUserLogined } from './zalo-utils';
-import { onErrorResumeNextWith } from 'rxjs';
 
 export enum ResultSendMessageFlow {
   NO_ADD_FRIEND_BUTTON = 'NO_ADD_FRIEND_BUTTON',
@@ -74,20 +73,16 @@ class ZaloSendMessageFlow {
   async run(): Promise<ResultSendMessageFlow> {
     if (!this.phoneNumber) return ResultSendMessageFlow.NO_FIND_USER;
 
-    let isSuccess: boolean = false;
-
     // eslint-disable-next-line no-debugger
     await waitForUserLogined();
 
     //TODO get friend from contact list
-    const existsFriend =
-      (await this.openChatBoxForFriend(this.phoneNumber)) || (await this.fallbackToFindFriend(this.phoneNumber));
+    const existsFriend = await this.openChatBoxForFriend(this.phoneNumber);
+    //|| (await this.fallbackToFindFriend(this.phoneNumber));
 
-    if (existsFriend) {
-      isSuccess = await this.sendMessageToFriend(this.message);
-    }
+    if (!existsFriend) return ResultSendMessageFlow.NO_FIND_USER;
 
-    return isSuccess ? ResultSendMessageFlow.SUCCESS : ResultSendMessageFlow.FAILURE;
+    return await this.sendMessageToFriend(this.message);
 
     //=========================================================================================================
 
@@ -114,7 +109,21 @@ class ZaloSendMessageFlow {
       //trigger click event
       if (firstItem && firstItem.getAttribute('id')?.startsWith('friend-item')) {
         firstItem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-        result = true;
+
+        // check if show modal  ???
+        try {
+          await waitForElementBySelector('div.zl-modal span.zl-modal__dialog__header__title-text', 500);
+
+          //clear search input
+          searchFriendInput.value = '';
+          searchFriendInput.dispatchEvent(new Event('blur', { bubbles: true }));
+          searchFriendInput.dispatchEvent(
+            new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, keyCode: 27, which: 27 }),
+          );
+        } catch {
+          // when not show modal, it means already in chat box
+          result = true;
+        }
       }
     } catch (error) {
       console.error(error);
@@ -178,8 +187,8 @@ class ZaloSendMessageFlow {
     return result;
   }
 
-  private async sendMessageToFriend(message: string): Promise<boolean> {
-    let result: boolean = false;
+  private async sendMessageToFriend(message: string): Promise<ResultSendMessageFlow> {
+    let result: ResultSendMessageFlow = ResultSendMessageFlow.FAILURE;
 
     try {
       const messageTextContainer = await waitForElement(SEND_MESSAGE_TEXT_CONTAINER_ID);
@@ -201,7 +210,7 @@ class ZaloSendMessageFlow {
 
       sendBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-      result = true;
+      result = ResultSendMessageFlow.SUCCESS;
     } catch (error) {
       console.error(error);
     }

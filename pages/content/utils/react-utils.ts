@@ -1,3 +1,5 @@
+import { NotFoundException } from './exception';
+
 export async function hookReactComponent(id: string, traverseUp = 0) {
   try {
     const element = await waitForElement(id);
@@ -40,7 +42,7 @@ export function waitForElement(id: string, timeout = 5000): Promise<HTMLElement>
         resolve(element);
       } else if (counter >= timeout) {
         clearInterval(interval);
-        reject(new Error(`Timeout waiting for element with id ${id}`));
+        reject(new NotFoundException(id, `Timeout waiting for element with id ${id}`));
       }
       counter += 100;
     }, 100);
@@ -57,7 +59,7 @@ export function waitForElementBySelector(selector: string, timeout = 5000): Prom
         resolve(element);
       } else if (counter >= timeout) {
         clearInterval(interval);
-        reject(new Error(`Timeout waiting for element selector: ${selector}`));
+        reject(new NotFoundException(selector, `Timeout waiting for element selector: ${selector}`));
       }
       counter += 100;
     }, 100);
