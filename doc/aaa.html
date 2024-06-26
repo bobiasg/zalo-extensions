@@ -14,7 +14,7 @@
           return;
         }
         // Handle the response message
-        console.log('Response from content script:', event.data.message);
+        console.log('Response from proxy script:', event.data.message);
       });
 
       document.addEventListener('DOMContentLoaded', () => {
@@ -22,7 +22,7 @@
           sendMessageToExtension({
             type: 'send-message',
             data: {
-              phone: '0948832001',
+              phone: '0947904141',
               message: `Hôm nay Phan Gia Xanh có:
 Trái cây hữu cơ:
 🌱 Thanh long vườn ruột đỏ : 25k/kg

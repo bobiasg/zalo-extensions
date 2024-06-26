@@ -112,7 +112,7 @@ class ZaloSendMessageFlow {
       //TODO should check phone number again to make sure select right person
 
       //trigger click event
-      if (firstItem) {
+      if (firstItem && firstItem.getAttribute('id')?.startsWith('friend-item')) {
         firstItem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
         result = true;
       }

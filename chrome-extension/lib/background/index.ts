@@ -43,10 +43,16 @@ function handleConnect(port: chrome.runtime.Port) {
       chrome.runtime.onMessage.removeListener(handleZaloRequest);
 
       zaloStorage.setStatus('disconnected');
+
+      // send out all pending message
+      queueMessages.forEach(({ data, callback }) => {
+        callback({ error: 'disconnected', zaloEvent: data });
+      });
     });
   }
 }
 
+// process zalo request from proxy
 function processZaloRequest(
   port: chrome.runtime.Port,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +91,7 @@ function processZaloRequest(
         //TODO handle loss connection between content and background
         //message should remain in queue, waiting for reconnect
 
-        // Process the request from the content script
+        // forward message to content script for processing
         port.postMessage(data);
 
         return true;
@@ -122,14 +128,17 @@ function processContentMessage(message: any): void {
 // events ==================================================================
 
 chrome.runtime.onInstalled.addListener(() => {
+  // update status zalo connection
   zaloStorage.setStatus('disconnected');
+
+  // clear all message in storage
+  zaloMessageStorage.clear();
 });
 
 chrome.runtime.onConnect.addListener(handleConnect);
 
-// listen message from sidepanel
-chrome.runtime.onMessage.addListener(request => {
-  //listen request form proxy
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // listen message from sidepanel
   if (request.type === 'reconnect-zalo') {
     chrome.tabs.query({ url: '*://chat.zalo.me/*' }, tabs => {
       const tab = tabs.length > 0 ? tabs[0] : null;
@@ -141,7 +150,21 @@ chrome.runtime.onMessage.addListener(request => {
         chrome.tabs.create({ url: 'https://chat.zalo.me/' });
       }
     });
+
+    sendResponse({ message: 'reconnecting zalo' });
   }
+
+  //listen request form proxy
+  if (request.action === 'zaloRequest') {
+    zaloStorage.getStatus().then(zaloStatus => {
+      if (zaloStatus !== 'connected') {
+        console.log('background: zalo not connected, send error response');
+        sendResponse({ error: 'disconnected', zaloEvent: request.data });
+      }
+    });
+  }
+
+  return true;
 });
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
