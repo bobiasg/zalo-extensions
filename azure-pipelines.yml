@@ -66,6 +66,9 @@ stages:
             deploy:
               steps:
                 - script: |
+                    echo "Checking if file exists at $(Build.ArtifactStagingDirectory)/zalo.zip"
+                    ls -l $(Build.ArtifactStagingDirectory)/zalo.zip
+                    echo "Sending artifact to Telegram"
                     curl -F "document=@$(Build.ArtifactStagingDirectory)/zalo.zip" -F chat_id=$(TelegramChatID) -F caption="Here is the zalo.zip artifact" https://api.telegram.org/bot$(TelegramBotToken)/sendDocument
                   displayName: 'Send artifact to Telegram'
                   env:
