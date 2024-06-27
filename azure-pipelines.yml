@@ -13,7 +13,7 @@ variables:
   pnpm_config_cache: $(Pipeline.Workspace)/.pnpm-store
 
 steps:
-- task: Cache@2
+  - task: Cache@2
     inputs:
       key: 'pnpm | "$(Agent.OS)" | pnpm-lock.yaml'
       path: $(pnpm_config_cache)
