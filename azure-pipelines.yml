@@ -65,11 +65,15 @@ stages:
           runOnce:
             deploy:
               steps:
+                - download: current
+                  artifact: zalo
+                  patterns: '**'
+
                 - script: |
-                    echo "Checking if file exists at $(Build.ArtifactStagingDirectory)/zalo.zip"
-                    ls -l $(Build.ArtifactStagingDirectory)/zalo.zip
+                    echo "Checking if file exists at $(Pipeline.Workspace)/zalo/zalo.zip"
+                    ls -l $(Pipeline.Workspace)/zalo/zalo.zip
                     echo "Sending artifact to Telegram"
-                    curl -F "document=@$(Build.ArtifactStagingDirectory)/zalo.zip" -F chat_id=$(TelegramChatID) -F caption="Here is the zalo.zip artifact" https://api.telegram.org/bot$(TelegramBotToken)/sendDocument
+                    curl -F "document=@$(Pipeline.Workspace)/zalo/zalo.zip" -F chat_id=$(TelegramChatID) -F caption="Here is the zalo.zip artifact" https://api.telegram.org/bot$(TelegramBotToken)/sendDocument
                   displayName: 'Send artifact to Telegram'
                   env:
                     TelegramBotToken: $(TelegramBotToken)
