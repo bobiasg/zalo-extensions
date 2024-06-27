@@ -182,6 +182,7 @@ class ZaloSendMessageFlow {
       console.error(error);
     }
 
+    // TODO
     // onRequestAnimationFrame();
 
     return result;
