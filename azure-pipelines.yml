@@ -19,7 +19,7 @@ stages:
         steps:
           - task: Cache@2
             inputs:
-              key: 'pnpm | "$(Agent.OS)" | pnpm-lock.yaml'
+              key: 'pnpm | "$(Agent.OS)" | "$(Build.SourceBranchName)" | pnpm-lock.yaml'
               path: $(pnpm_config_cache)
             displayName: Cache pnpm
 
@@ -49,15 +49,25 @@ stages:
               ArtifactName: 'zalo'
               publishLocation: 'Container'
             displayName: 'Upload artifact'
+            continueOnError: true
+            condition: succeededOrFailed()
 
   - stage: Deploy
+
+    variables:
+      - group: TelegramBot
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
     displayName: 'Dev Deployment'
     jobs:
-      - deployment: Deploy
+      - deployment: DeployToDev
         environment: dev
         strategy:
           runOnce:
             deploy:
               steps:
-                - download: current
-                  artifact: zalo
+                - script: |
+                    curl -F document=@$(Build.ArtifactStagingDirectory)/zalo.zip -F chat_id=$(TelegramChatID) -F caption="Here is the zalo.zip artifact" https://api.telegram.org/bot$(TelegramBotToken)/sendDocument
+                  displayName: 'Send artifact to Telegram'
+                  env:
+                    TelegramBotToken: $(TelegramBotToken)
+                    TelegramChatID: $(TelegramChatID)
