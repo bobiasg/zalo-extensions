@@ -17,17 +17,35 @@ export enum ResultSendMessageFlow {
   NO_ADD_FRIEND_BUTTON = 'NO_ADD_FRIEND_BUTTON',
   NO_FIND_FRIEND_CONTAINER = 'NO_FIND_FRIEND_CONTAINER',
   SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE',
+  OVER_QUOTA = 'OVER_QUOTA',
+  CAN_NOT_SEND_MESSAGE = 'CAN_NOT_SEND_MESSAGE',
   NO_FIND_USER = 'NO_FIND_USER',
   EXISTS_FRIEND = 'EXISTS_FRIEND',
-  FAILURE = 'FAILURE',
-  CAN_NOT_SEND_MESSAGE = 'CAN_NOT_SEND_MESSAGE',
+  EXISTS_USER = 'EXISTS_USER',
 }
 
-export async function zaloSendMessage(phoneNumber: string = '', message: string = ''): Promise<ResultSendMessageFlow> {
+export interface SendMessageResult {
+  status: ResultSendMessageFlow;
+  user: {
+    userStatus: 'friend' | 'user' | 'no_user' | '';
+    userInfo: unknown;
+  };
+}
+
+const SendMessageFailureResult: SendMessageResult = {
+  status: ResultSendMessageFlow.FAILURE,
+  user: {
+    userStatus: '',
+    userInfo: null,
+  },
+};
+
+export async function zaloSendMessage(phoneNumber: string = '', message: string = ''): Promise<SendMessageResult> {
   const builder = new ZaloSendMessageFlowBuilder();
 
   // eslint-disable-next-line no-debugger
-  if (!phoneNumber || !message) return ResultSendMessageFlow.FAILURE;
+  if (!phoneNumber || !message) return SendMessageFailureResult;
 
   if (phoneNumber) builder.withPhoneNumber(phoneNumber);
   if (message) builder.withMessage(message);
@@ -70,19 +88,34 @@ class ZaloSendMessageFlow {
   phoneNumber: string = '';
   message: string = '';
 
-  async run(): Promise<ResultSendMessageFlow> {
-    if (!this.phoneNumber) return ResultSendMessageFlow.NO_FIND_USER;
+  async run(): Promise<SendMessageResult> {
+    let result: SendMessageResult = {
+      status: ResultSendMessageFlow.FAILURE,
+      user: {
+        userStatus: '',
+        userInfo: null,
+      },
+    };
+
+    if (!this.phoneNumber) {
+      result.status = ResultSendMessageFlow.NO_FIND_USER;
+      return result;
+    }
 
     // eslint-disable-next-line no-debugger
     await waitForUserLogined();
 
     //TODO get friend from contact list
-    const existsFriend = await this.openChatBoxForFriend(this.phoneNumber);
-    //|| (await this.fallbackToFindFriend(this.phoneNumber));
+    result = await this.openChatBoxForFriend(this.phoneNumber);
 
-    if (!existsFriend) return ResultSendMessageFlow.NO_FIND_USER;
+    // DEBUG
+    // return result;
 
-    return await this.sendMessageToFriend(this.message);
+    if (result.status == ResultSendMessageFlow.EXISTS_USER || result.status == ResultSendMessageFlow.EXISTS_FRIEND) {
+      result.status = await this.sendMessageToFriend(this.message);
+    }
+
+    return result;
 
     //=========================================================================================================
 
@@ -90,17 +123,24 @@ class ZaloSendMessageFlow {
     // return this.fallback();
   }
 
-  private async openChatBoxForFriend(phoneNumber: string): Promise<boolean> {
+  private async openChatBoxForFriend(phoneNumber: string): Promise<SendMessageResult> {
     // offRequestAnimationFrame();
 
-    let result: boolean = false;
+    const result: SendMessageResult = {
+      status: ResultSendMessageFlow.NO_FIND_USER,
+      user: {
+        userStatus: '',
+        userInfo: null,
+      },
+    };
 
+    let searchFriendInput: HTMLInputElement | null = null;
     try {
-      const searchFriendInput = (await waitForElement('contact-search-input')) as HTMLInputElement;
+      searchFriendInput = (await waitForElement('contact-search-input')) as HTMLInputElement;
       searchFriendInput.value = phoneNumber;
       searchFriendInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-      await waitForElementBySelector('[class="item-search__title"]');
+      const itemSearchTitle = await waitForElementBySelector('[class="item-search__title"]');
       const searchResultList = await waitForElement('global_search_list');
       //get first item has class 'conv-item'
       const firstItem = searchResultList.querySelector('.conv-item');
@@ -108,25 +148,57 @@ class ZaloSendMessageFlow {
 
       //trigger click event
       if (firstItem && firstItem.getAttribute('id')?.startsWith('friend-item')) {
+        const friendId = firstItem.getAttribute('id')?.replace('friend-item-', '');
+
         firstItem.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+        // sleep 1s to wait chat box appear
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        //wait chat box appear
+        const messageViewContainer = (await waitForElement('messageView')) as HTMLDivElement;
+
+        // find has add friend button
+        const addFriendBtn = messageViewContainer.querySelector('[data-id="btn_Chat_AddFrd"]');
+        result.status = addFriendBtn == null ? ResultSendMessageFlow.EXISTS_FRIEND : ResultSendMessageFlow.EXISTS_USER;
+        result.user = {
+          userStatus: result.status == ResultSendMessageFlow.EXISTS_FRIEND ? 'friend' : 'user',
+          userInfo: {
+            userId: friendId,
+          },
+        };
 
         // check if show modal  ???
         try {
           await waitForElementBySelector('div.zl-modal span.zl-modal__dialog__header__title-text', 500);
-
-          //clear search input
-          searchFriendInput.value = '';
-          searchFriendInput.dispatchEvent(new Event('blur', { bubbles: true }));
-          searchFriendInput.dispatchEvent(
-            new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, keyCode: 27, which: 27 }),
-          );
+          result.status = ResultSendMessageFlow.NO_FIND_USER;
         } catch {
           // when not show modal, it means already in chat box
-          result = true;
+          //result = ResultSendMessageFlow.EXISTS_FRIEND;
+        }
+      } else {
+        // sleep 1s to wait chat box appear
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // check if has warning over quota seach friend
+        if (
+          itemSearchTitle.querySelector('[data-translate-inner="STR_PLEASE_NOTE"]') != null ||
+          searchResultList.querySelector('[data-translate-inner="STR_LIMIT_SEARCH_NUM_PHONE"]') != null
+        ) {
+          result.status = ResultSendMessageFlow.OVER_QUOTA;
         }
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      if (searchFriendInput) {
+        //clear search input
+        searchFriendInput.value = '';
+        searchFriendInput.dispatchEvent(new Event('blur', { bubbles: true }));
+        searchFriendInput.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, keyCode: 27, which: 27 }),
+        );
+      }
     }
 
     // onRequestAnimationFrame();

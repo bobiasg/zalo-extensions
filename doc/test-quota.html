@@ -4,6 +4,8 @@
     <h1> HAHAHA </h1>
 
     <script type="text/javascript">
+      var result = {};
+
       function sendMessageToExtension(message) {
         window.postMessage({ message: message }, '*');
       }
@@ -14,10 +16,14 @@
           return;
         }
         // Handle the response message
-        console.log('Response from proxy script:', event.data.message);
+        var message = event.data.message;
+        console.log('Response from proxy script:', message);
+
+        result[message.zaloEvent.requestId] = message.message;
       });
 
-      var message = `Hôm nay Phan Gia Xanh có:
+      async function TestQuota() {
+        var message = `Hôm nay Phan Gia Xanh có:
       Trái cây hữu cơ:
       🌱 Thanh long vườn ruột đỏ : 25k/kg
       🌱 Dứa mật vườn : 20k/trái
@@ -79,26 +85,52 @@
       🏠căn 1M ,CT1- VCN Phước Hải,tp Nha Trang
       📞0866133355 - 0866134455`;
 
-      document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-          // sendMessageToExtension({
-          //   type: 'send-message',
-          //   data: {
-          //     phone: '0948832001',
-          //     message: message,
-          //   },
-          //   requestId: '0948832001',
-          // });
+        var phone = 914224300;
+
+        for (let i = 0; i < 100; i++) {
+          await new Promise(resolve => setTimeout(resolve, 4000));
+
+          var phoneNumber = '0' + (phone + i).toString();
           sendMessageToExtension({
             type: 'send-message',
             data: {
-              phone: '0948832001',
+              phone: phoneNumber,
               message: message,
             },
-            requestId: '0948832001',
+            requestId: phoneNumber,
           });
-        }, 1000);
-      });
+        }
+
+        // document.addEventListener('DOMContentLoaded', () => {
+
+        //   setTimeout(() => {
+        //     // sendMessageToExtension({
+        //     //   type: 'send-message',
+        //     //   data: {
+        //     //     phone: '0948832001',
+        //     //     message: message,
+        //     //   },
+        //     //   requestId: '0948832001',
+        //     // });
+
+        //     var phone = 914224300;
+
+        //     for (let i = 0; i < 100; i++) {
+        //       var phoneNumber = '0' + (phone + i).toString();
+        //       sendMessageToExtension({
+        //         type: 'send-message',
+        //         data: {
+        //           phone: phoneNumber,
+        //           message: message,
+        //         },
+        //         requestId: phoneNumber,
+        //       });
+        //     }
+        //   }, 1000);
+        // });
+      }
+
+      TestQuota();
     </script>
   </body>
 </html>

@@ -67,8 +67,9 @@ export class ZaloEventProcessor {
           case 'send-message':
             return from(zaloSendMessage(zaloEvent.data?.phone, zaloEvent.data?.message)).pipe(
               map(result => ({
-                error: result !== ResultSendMessageFlow.SUCCESS,
-                message: result == ResultSendMessageFlow.SUCCESS ? undefined : (result as string),
+                error: result.status !== ResultSendMessageFlow.SUCCESS,
+                message: result.status == ResultSendMessageFlow.SUCCESS ? undefined : (result.status as string),
+                user: result.user,
                 zaloEvent,
               })),
               catchError(error => {
