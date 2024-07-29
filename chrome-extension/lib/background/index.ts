@@ -169,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log('background: forward zaloReveiced', request);
     chrome.tabs.query({}, function (tabs) {
       for (let i = 0; i < tabs.length; i++) {
-        chrome.tabs.sendMessage(tabs[i].id, request, function (response) {
+        chrome.tabs.sendMessage(tabs[i].id || 0, request, function (response) {
           if (chrome.runtime.lastError) {
             console.error('Error sending message to tab ' + tabs[i].id + ': ' + chrome.runtime.lastError.message);
           } else {

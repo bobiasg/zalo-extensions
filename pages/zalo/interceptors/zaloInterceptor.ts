@@ -45,7 +45,7 @@ async function intercepterMessages() {
   */
   previewManager.onReceiveNewMessage = function (...args: unknown[]) {
     console.debug('onReceiveNewMessage:', args);
-    const [messageType, message, ...rest] = args;
+    const [, message] = args;
     const zaloMessage = message as ZaloMessage;
 
     if (zaloMessage.fromUid !== '') {

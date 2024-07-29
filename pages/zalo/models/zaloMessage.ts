@@ -60,8 +60,8 @@ export interface ZaloMessage {
   notify?: string;
   sendDttm?: string;
   serverTime?: string;
-  fromUid?: string;
-  toUid?: string;
+  fromUid: string;
+  toUid: string;
   dName?: string;
   localDttm?: number;
 
