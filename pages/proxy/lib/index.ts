@@ -78,6 +78,17 @@ window.addEventListener('message', event => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   console.log('proxy: receive request:', request);
 
+  if (request?.action === 'zaloReveiced') {
+    // Send the response back to the web page
+    window.postMessage(
+      {
+        source: 'zalo_extension',
+        action: 'zaloReveiced',
+        message: request.data,
+      },
+      '*',
+    );
+  }
   // Process the message...
   // Send a response
   sendResponse({ message: 'Goodbye from the proxy script!' });
@@ -157,3 +168,5 @@ ex: {
       });
     });
 */
+
+console.log('proxy script loaded');

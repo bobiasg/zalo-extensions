@@ -138,6 +138,7 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onConnect.addListener(handleConnect);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('background received message:', request);
   // listen message from sidepanel
   if (request.type === 'reconnect-zalo') {
     chrome.tabs.query({ url: '*://chat.zalo.me/*' }, tabs => {
@@ -164,28 +165,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 
+  if (request.action === 'zaloReveiced') {
+    console.log('background: forward zaloReveiced', request);
+    chrome.tabs.query({}, function (tabs) {
+      for (let i = 0; i < tabs.length; i++) {
+        chrome.tabs.sendMessage(tabs[i].id, request, function (response) {
+          if (chrome.runtime.lastError) {
+            console.error('Error sending message to tab ' + tabs[i].id + ': ' + chrome.runtime.lastError.message);
+          } else {
+            console.log('Response from tab ' + tabs[i].id + ': ' + response);
+          }
+        });
+      }
+    });
+    sendResponse({});
+  }
+
   return true;
 });
-
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url?.includes('chat.zalo.me')) {
-    chrome.scripting.executeScript({
-      target: { tabId: tabId },
-      func: functionToInject,
-      world: 'MAIN',
-    });
-  }
-});
-
-//TODO wip should on off requestAnimationFrame by send message between content script and web page with window.sendMessage
-function functionToInject() {
-  const customRequestAnimationFrame = function (callback: TimerHandler) {
-    console.log('Custom requestAnimationFrame called');
-    return window.setTimeout(callback, 1000 / 60); // Example: fallback to setTimeout with 60fps
-  };
-
-  window.requestAnimationFrame = customRequestAnimationFrame;
-}
 
 //===========================================================
 

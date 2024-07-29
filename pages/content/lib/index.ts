@@ -27,7 +27,7 @@ function connectToBackgroundScript(retryCount = 0) {
   // Connect to the background script
   const port = chrome.runtime.connect({ name: 'content' });
 
-  //listernet event result and send back to background
+  //listerner event result and send back to background
   const messageSubscription = processor.subscribe(result => {
     console.log('content: processed result:', result);
     port.postMessage(result);
@@ -64,6 +64,42 @@ function connectToBackgroundScript(retryCount = 0) {
       console.log('content: failed to reconnect after 3 attempts');
     }
   });
+
+  // listener message event from regular page
+  // and send to background script
+  // Listen for messages from the web page
+  window.addEventListener('message', event => {
+    // console.log('content script receive message', event.data);
+
+    // Check the event origin to ensure it comes from a trusted source
+    if (event.source !== window) {
+      return;
+    }
+
+    const message = event.data;
+
+    if (isZaloMessageEvent(message)) {
+      zaloReceivedMessage(message);
+    }
+  });
+}
+
+//TODO improve and refactor code
+function isZaloMessageEvent(message: object) {
+  // console.log('isZaloMessageEvent', message);
+  return message?.hasOwnProperty('zaloMessage');
+}
+
+/// message is ZaloEvent
+function zaloReceivedMessage(message: unknown) {
+  const request = {
+    action: 'zaloReveiced',
+    data: message,
+  };
+
+  console.log('content: forward received message:', request);
+  // Relay the message to the background script
+  chrome.runtime.sendMessage(request);
 }
 
 connectToBackgroundScript();

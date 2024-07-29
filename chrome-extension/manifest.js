@@ -49,6 +49,12 @@ const manifest = Object.assign(
         // world: 'MAIN',
       },
       {
+        matches: ['https://*.zalo.me/*'],
+        js: ['zalo/index.iife.js'],
+        run_at: 'document_end',
+        world: 'MAIN',
+      },
+      {
         matches: ['<all_urls>'],
         js: ['proxy/index.iife.js'],
         run_at: 'document_end',

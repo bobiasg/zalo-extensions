@@ -14,7 +14,7 @@
           return;
         }
         // Handle the response message
-        console.log('Response from proxy script:', event.data.message);
+        console.log('Response from proxy script:event.data=', event.data);
       });
 
       var message = `Hôm nay Phan Gia Xanh có:
@@ -80,24 +80,24 @@
       📞0866133355 - 0866134455`;
 
       document.addEventListener('DOMContentLoaded', () => {
-        setTimeout(() => {
-          // sendMessageToExtension({
-          //   type: 'send-message',
-          //   data: {
-          //     phone: '0948832001',
-          //     message: message,
-          //   },
-          //   requestId: '0948832001',
-          // });
-          sendMessageToExtension({
-            type: 'send-message',
-            data: {
-              phone: '0948832001',
-              message: message,
-            },
-            requestId: '0948832001',
-          });
-        }, 1000);
+        // setTimeout(() => {
+        //   // sendMessageToExtension({
+        //   //   type: 'send-message',
+        //   //   data: {
+        //   //     phone: '0948832001',
+        //   //     message: message,
+        //   //   },
+        //   //   requestId: '0948832001',
+        //   // });
+        //   sendMessageToExtension({
+        //     type: 'send-message',
+        //     data: {
+        //       phone: '0948832001',
+        //       message: message,
+        //     },
+        //     requestId: '0948832001',
+        //   });
+        // }, 1000);
       });
     </script>
   </body>
