@@ -1,7 +1,7 @@
 {
   "name": "@chrome-extension-boilerplate/zalo-script",
   "version": "0.0.1",
-  "description": "chrome extension zalo script",
+  "description": "script run on zalo site context",
   "private": true,
   "sideEffects": true,
   "files": [
@@ -20,10 +20,12 @@
   "dependencies": {
     "@chrome-extension-boilerplate/shared": "workspace:*",
     "@chrome-extension-boilerplate/storage": "workspace:*",
+    "@chrome-extension-boilerplate/zalo": "workspace:*",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@chrome-extension-boilerplate/hmr": "workspace:*",
-    "@chrome-extension-boilerplate/tsconfig": "workspace:*"
+    "@chrome-extension-boilerplate/tsconfig": "workspace:*",
+    "@types/node": "^20.12.11"
   }
 }

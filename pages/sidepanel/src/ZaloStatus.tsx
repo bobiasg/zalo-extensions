@@ -1,6 +1,6 @@
 // write react component
 import React, { useEffect, useState } from 'react';
-import { useZaloStorage } from '@chrome-extension-boilerplate/zalo/lib/ZaloStorage';
+import { useZaloStorage } from '@chrome-extension-boilerplate/zalo/lib/zalo-storage';
 
 interface ZaloStatusProps {}
 

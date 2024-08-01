@@ -1,8 +1,8 @@
-import { ZaloMessage } from '@chrome-extension-boilerplate/zalo';
+import { ZaloSendMessageRequest } from '@chrome-extension-boilerplate/zalo/models';
 import React from 'react';
 
 type MessageProps = {
-  message: ZaloMessage;
+  message: ZaloSendMessageRequest;
 };
 
 const Message: React.FC<MessageProps> = React.memo(({ message }: MessageProps) => {

@@ -1,20 +1,43 @@
-export async function hookReactComponent(id: string, traverseUp = 0) {
-  try {
-    const element = await waitForElement(id);
+export interface ReactFiber {
+  // Type of the component or DOM node (e.g., "div", "App", "Button")
+  type: unknown;
 
-    if (element != null) {
-      const component = getFiberInstance(element, traverseUp);
+  // Associated DOM node (if applicable)
+  stateNode: ReactFiber | null;
 
-      return component;
-    }
-  } catch (error) {
-    console.error(error);
-  }
+  // Parent fiber in the tree
+  return: ReactFiber | null;
 
-  return null;
+  // First child fiber
+  child: ReactFiber | null;
+
+  // Next sibling fiber
+  sibling: ReactFiber | null;
+
+  // Position of this fiber in its parent's child array
+  index: number;
+
+  // Alternate fiber (the previous fiber representing this component)
+  alternate: ReactFiber | null;
+
+  // Memoized props and state (the latest props and state for this component)
+  memoizedProps: unknown;
+  memoizedState: unknown;
+
+  // Expiration time (the deadline for when this component needs to be updated)
+  expirationTime: number;
+
+  // Effect tag (a bitmask that describes what side effects this component has)
+  effectTag: number;
 }
 
-export async function hookReactComponentBySelector(selector: string, traverseUp = 0) {
+/**
+ * Get react componnet from Dom
+ * @param selector selector path
+ * @param traverseUp traverse up level
+ * @returns react component or null
+ */
+export async function hookReactComponentBySelector(selector: string, traverseUp = 0): Promise<ReactFiber | null> {
   try {
     const element = await waitForElementBySelector(selector);
 
@@ -30,7 +53,12 @@ export async function hookReactComponentBySelector(selector: string, traverseUp 
   return null;
 }
 
-export async function getAllReactContext(selector: string) {
+/**
+ * Helper function get all context for react component from Dom
+ * @param selector selector path
+ * @returns array of react context
+ */
+export async function getAllReactContext(selector: string): Promise<ReactFiber[]> {
   const contexts = [];
   try {
     const element = await waitForElementBySelector(selector);
@@ -38,7 +66,10 @@ export async function getAllReactContext(selector: string) {
     if (element != null) {
       let component = getFiberInstance(element, 0);
       while (component != null) {
-        if (component != null && component.type?.$$typeof?.toString() == 'Symbol(react.provider)') {
+        if (
+          component != null &&
+          (component.type as unknown as { $$typeof: unknown })?.$$typeof?.toString() == 'Symbol(react.provider)'
+        ) {
           contexts.push(component);
         }
         component = getCompFiber(component);
@@ -51,24 +82,13 @@ export async function getAllReactContext(selector: string) {
   return contexts;
 }
 
-export function waitForElement(id: string, timeout = 5000): Promise<HTMLElement> {
-  return new Promise((resolve, reject) => {
-    let counter = 0;
-    const interval = setInterval(() => {
-      const element = document.getElementById(id);
-      if (element) {
-        clearInterval(interval);
-        resolve(element);
-      } else if (counter >= timeout) {
-        clearInterval(interval);
-        reject(new Error(`Timeout waiting for element with id ${id}`));
-      }
-      counter += 100;
-    }, 100);
-  });
-}
-
-export function waitForElementBySelector(selector: string, timeout = 5000): Promise<HTMLElement> {
+/**
+ * Helper function wait for element by selector
+ * @param selector
+ * @param timeout
+ * @returns
+ */
+function waitForElementBySelector(selector: string, timeout = 5000): Promise<HTMLElement> {
   return new Promise((resolve, reject) => {
     let counter = 0;
     const interval = setInterval(() => {
@@ -85,7 +105,13 @@ export function waitForElementBySelector(selector: string, timeout = 5000): Prom
   });
 }
 
-export function getFiberInstance(dom: HTMLElement, traverseUp = 0) {
+/**
+ * Find react component from Dom that has __reactFiber* or __reactInternalInstance prop
+ * @param dom
+ * @param traverseUp
+ * @returns
+ */
+function getFiberInstance(dom: HTMLElement, traverseUp = 0): ReactFiber | null {
   const key = Object.keys(dom).find(key => {
     return (
       key.startsWith('__reactFiber$') || // react 17+
@@ -114,10 +140,15 @@ export function getFiberInstance(dom: HTMLElement, traverseUp = 0) {
     compFiber = getCompFiber(compFiber);
   }
 
-  return compFiber.stateNode || compFiber;
+  return compFiber?.stateNode || compFiber;
 }
 
-export const getCompFiber = (fiber: unknown) => {
+/**
+ *
+ * @param fiber
+ * @returns
+ */
+const getCompFiber = (fiber: ReactFiber | null): ReactFiber | null => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   let parentFiber = fiber.return;

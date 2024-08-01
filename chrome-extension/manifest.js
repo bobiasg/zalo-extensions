@@ -55,7 +55,7 @@ const manifest = Object.assign(
         world: 'MAIN',
       },
       {
-        matches: ['<all_urls>'],
+        matches: ['http://app.services.io.vn/*', 'http://localhost/*', 'http://127.0.0.1/*'],
         js: ['proxy/index.iife.js'],
         run_at: 'document_end',
         // world: 'MAIN',

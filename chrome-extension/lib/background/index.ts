@@ -10,6 +10,7 @@ type QueueMessageItem = {
 };
 
 let zaloPort: chrome.runtime.Port | null = null;
+let proxyPort: chrome.runtime.Port | null = null;
 const queueMessages = new Map<string, QueueMessageItem>();
 // =========================================================================
 
@@ -49,6 +50,10 @@ function handleConnect(port: chrome.runtime.Port) {
         callback({ error: 'disconnected', zaloEvent: data });
       });
     });
+  }
+
+  if (port.name == 'proxy') {
+    proxyPort = port;
   }
 }
 
@@ -165,19 +170,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
   }
 
-  if (request.action === 'zaloReveiced') {
+  if (request.action === 'zaloReceivedMessage') {
     console.log('background: forward zaloReveiced', request);
-    chrome.tabs.query({}, function (tabs) {
-      for (let i = 0; i < tabs.length; i++) {
-        chrome.tabs.sendMessage(tabs[i].id || 0, request, function (response) {
-          if (chrome.runtime.lastError) {
-            console.error('Error sending message to tab ' + tabs[i].id + ': ' + chrome.runtime.lastError.message);
-          } else {
-            console.log('Response from tab ' + tabs[i].id + ': ' + response);
-          }
-        });
-      }
-    });
+
+    if (proxyPort) {
+      proxyPort.postMessage(request);
+    } else {
+      console.warn(`proxy port disconnected`);
+    }
+
+    // chrome.tabs.query({}, function (tabs) {
+    //   for (let i = 0; i < tabs.length; i++) {
+    //     chrome.tabs.sendMessage(tabs[i].id || 0, request, function (response) {
+    //       if (chrome.runtime.lastError) {
+    //         console.error('Error sending message to tab ' + tabs[i].id + ': ' + chrome.runtime.lastError.message);
+    //       } else {
+    //         console.log('Response from tab ' + tabs[i].id + ': ' + response);
+    //       }
+    //     });
+    //   }
+    // });
+
     sendResponse({});
   }
 

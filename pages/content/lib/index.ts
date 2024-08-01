@@ -1,5 +1,6 @@
 // import { zaloSendMessage } from '@zalo/send-message-friend-flow';
 // import { getFriendList } from '../zalo';
+import { ZaloReceivedMessageEvent } from '@chrome-extension-boilerplate/zalo/models';
 import { useZaloEventProcessor } from '@zalo/zalo-event-processor';
 
 // //sync friend list
@@ -77,29 +78,17 @@ function connectToBackgroundScript(retryCount = 0) {
     }
 
     const message = event.data;
-
-    if (isZaloMessageEvent(message)) {
+    if (ZaloReceivedMessageEvent.isValid(message)) {
       zaloReceivedMessage(message);
     }
   });
 }
 
-//TODO improve and refactor code
-function isZaloMessageEvent(message: object) {
-  // console.log('isZaloMessageEvent', message);
-  return message?.hasOwnProperty('zaloMessage');
-}
-
 /// message is ZaloEvent
-function zaloReceivedMessage(message: unknown) {
-  const request = {
-    action: 'zaloReveiced',
-    data: message,
-  };
-
-  console.log('content: forward received message:', request);
+function zaloReceivedMessage(message: ZaloReceivedMessageEvent) {
+  console.log('content: forward received message:', message);
   // Relay the message to the background script
-  chrome.runtime.sendMessage(request);
+  chrome.runtime.sendMessage(message);
 }
 
 connectToBackgroundScript();

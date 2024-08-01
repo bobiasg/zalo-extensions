@@ -1,22 +1,17 @@
-import zaloInterceptor from '../interceptors/zaloInterceptor';
+import interceptor from '../interceptors/message-interceptor';
+import { setConsole, offRequestAnimation } from '@utils/html-utils';
+import { dispatch } from '../dispatchers/default-dispatcher';
+import { ZaloReceivedMessageEvent, ZaloMessageData } from '@chrome-extension-boilerplate/zalo/models';
 
-//TODO wip should on off requestAnimationFrame by send message between content script and web page with window.sendMessage
-function offRequestAnimation() {
-  const customRequestAnimationFrame = function (callback: TimerHandler) {
-    // console.log('Custom requestAnimationFrame called');
-    return window.setTimeout(callback, 1000 / 60); // Example: fallback to setTimeout with 60fps
-  };
-
-  window.requestAnimationFrame = customRequestAnimationFrame;
-}
-
-async function intercepterZalo() {
-  (await zaloInterceptor.intercepterMessages()).subscribe(message => {
-    console.log('intercepterZalo: ', message);
+function intercepterZaloMessage() {
+  interceptor.subscribe((message: ZaloMessageData) => {
+    console.debug('intercepterZalo: ', message);
 
     // send the message to the content script
-    window.postMessage(message);
+    dispatch(new ZaloReceivedMessageEvent(message));
   });
+
+  interceptor.start();
 }
 
 function init() {
@@ -27,20 +22,10 @@ function init() {
   offRequestAnimation();
 
   setTimeout(() => {
-    intercepterZalo();
+    intercepterZaloMessage();
   }, 5000);
-}
 
-function setConsole() {
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-  // eslint-disable-next-line
-  // @ts-ignore
-  const console = iframe.contentWindow.console;
-  window.console = console;
+  console.debug('zalo interceptor script loaded');
 }
 
 init();
-
-console.log('zalo interceptor script loaded');

@@ -1,4 +1,7 @@
-/*
+import { ZaloGroup } from './zalo-group';
+import { ZaloUser } from './zalo-user';
+
+/* raw zalo message obj
 {
       "msgId": "5677550496195",
       "zglobalMsgId": "5677550496195",
@@ -108,4 +111,10 @@ export interface ZaloMessage {
 
   // Parsed tokens
   z_parsedTokens?: unknown[];
+}
+
+export interface ZaloMessageData {
+  formUser: ZaloUser;
+  toUser: ZaloUser | ZaloGroup;
+  zaloMessage: ZaloMessage;
 }

@@ -1,12 +1,12 @@
 import React from 'react';
-import { ZaloMessage, useZaloMessageStorage } from '@chrome-extension-boilerplate/zalo';
+import { ZaloSendMessageRequest, useZaloSendMessageStorage } from '@chrome-extension-boilerplate/zalo';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import Message from './Message';
 
 const QueueMessages: React.FC = () => {
   const parentRef = React.useRef<HTMLElement | null>(null);
-  const { zaloMessages, zaloMessageStorage } = useZaloMessageStorage();
+  const { zaloMessages, zaloMessageStorage } = useZaloSendMessageStorage();
 
   const messages = Object.values(zaloMessages.messages);
 
@@ -41,7 +41,7 @@ const QueueMessages: React.FC = () => {
         </div>
 
         {rowVirtualizer.getVirtualItems().map(virtualRow => {
-          const message = messages[virtualRow.index] as ZaloMessage | null;
+          const message = messages[virtualRow.index] as ZaloSendMessageRequest | null;
 
           return message == null ? null : (
             <div
