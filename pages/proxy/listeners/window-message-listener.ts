@@ -1,7 +1,7 @@
 /// listen event message from regular context
-import { ZaloEventMessage } from '@chrome-extension-boilerplate/zalo/models';
+import { ZaloEvent } from '@chrome-extension-boilerplate/zalo/models';
 
-type MessageHandler = (event: ZaloEventMessage) => void;
+type MessageHandler = (event: ZaloEvent) => void;
 const handlers: Map<string, MessageHandler[]> = new Map();
 
 const start = () => {
@@ -18,14 +18,16 @@ const onMessage = (event: MessageEvent) => {
     return;
   }
 
-  const message = event.data as ZaloEventMessage;
+  const message = event.data as ZaloEvent;
   if (message.source === 'zalo_extension') {
+    console.debug('Proxy: receive message:', message);
+
     const callbacks = handlers.get(message.action);
     if (callbacks) callbacks.forEach(callback => callback(message));
   }
 };
 
-const subscribe = (action: string, callback: (message: ZaloEventMessage) => void) => {
+const subscribe = (action: string, callback: (message: ZaloEvent) => void) => {
   if (handlers.has(action)) {
     handlers.get(action)?.push(callback);
   } else {
@@ -33,7 +35,7 @@ const subscribe = (action: string, callback: (message: ZaloEventMessage) => void
   }
 };
 
-const unsubscribe = (action: string, callback: (message: ZaloEventMessage) => void) => {
+const unsubscribe = (action: string, callback: (message: ZaloEvent) => void) => {
   if (handlers.has(action)) {
     const actionHandlers = handlers.get(action) || [];
     actionHandlers.splice(actionHandlers.indexOf(callback));

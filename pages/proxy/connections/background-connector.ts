@@ -32,4 +32,10 @@ function removeListener(callback: (message: unknown) => void) {
   }
 }
 
-export { postMessage, addListener, removeListener };
+function addListenerOnDisconnect(callback: () => void) {
+  if (port) {
+    port.onDisconnect.addListener(callback);
+  }
+}
+
+export { postMessage, addListener, removeListener, addListenerOnDisconnect };

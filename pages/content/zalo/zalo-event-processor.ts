@@ -54,43 +54,58 @@ export class ZaloEventProcessor {
         switch (zaloMessage.type) {
           case 'request-friend':
             return from(zaloAddFriend(zaloMessage.data?.phone, zaloMessage.data?.message)).pipe(
-              map(result => ({
-                error: result !== ResultAddFriendFlow.SUCCESS,
-                message: result == ResultAddFriendFlow.SUCCESS ? undefined : (result as string),
-                zaloMessage,
-              })),
+              map(result => {
+                const messageResult = new ZaloSendMessageResult(zaloMessage);
+                if (result !== ResultAddFriendFlow.SUCCESS) {
+                  messageResult.setError(result as string);
+                }
+                return messageResult;
+              }),
               catchError(error => {
                 //TODO log service
-                return of({ error: true, message: error.message, zaloMessage });
+                const errorResult = new ZaloSendMessageResult(zaloMessage);
+                errorResult.setError(error.message);
+                return of(errorResult);
               }),
             );
           case 'send-message':
             return from(zaloSendMessage(zaloMessage.data?.phone, zaloMessage.data?.message)).pipe(
-              map(result => ({
-                error: result.status !== ResultSendMessageFlow.SUCCESS,
-                message: result.status == ResultSendMessageFlow.SUCCESS ? undefined : (result.status as string),
-                user: result.user,
-                zaloMessage,
-              })),
+              map(result => {
+                const messageResult = new ZaloSendMessageResult(zaloMessage);
+                messageResult.user = result.user;
+                if (result.status !== ResultSendMessageFlow.SUCCESS) {
+                  messageResult.setError(result.status as string);
+                }
+                return messageResult;
+              }),
               catchError(error => {
                 //TODO log service
-                return of({ error: true, message: error.message, zaloMessage });
+                const errorResult = new ZaloSendMessageResult(zaloMessage);
+                errorResult.setError(error.message);
+                return of(errorResult);
               }),
             );
           case 'init-chat-mode':
             return from(initChatMode()).pipe(
-              map(result => ({
-                error: result !== ResultInitChatModeFlow.SUCCESS,
-                message: result == ResultInitChatModeFlow.SUCCESS ? undefined : (result as string),
-                zaloMessage,
-              })),
+              map(result => {
+                const messageResult = new ZaloSendMessageResult(zaloMessage);
+                if (result !== ResultInitChatModeFlow.SUCCESS) {
+                  messageResult.setError(result as string);
+                }
+                return messageResult;
+              }),
               catchError(error => {
                 //TODO log service
-                return of({ error: true, message: error.message, zaloMessage });
+                const errorResult = new ZaloSendMessageResult(zaloMessage);
+                errorResult.setError(error.message);
+                return of(errorResult);
               }),
             );
-          default:
-            return of({ error: true, message: 'NO_HANDLER', zaloMessage });
+          default: {
+            const errorResult = new ZaloSendMessageResult(zaloMessage);
+            errorResult.setError('NO_HANDLER');
+            return of(errorResult);
+          }
         }
       }),
     );

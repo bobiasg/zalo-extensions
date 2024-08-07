@@ -1,7 +1,11 @@
-import sendRequestListener from '../zalo/zalo-send-request-listener';
-import receivedMessageListener from '../zalo/zalo-received-message-listener';
+import sendRequestListener from '../listeners/zalo-send-request-listener';
+import receivedMessageListener from '../listeners/zalo-received-message-listener';
+import * as windowMessageListener from '../listeners/window-message-listener';
 
 function init() {
+  // start listen for window messaging. should call first for sendRequestListener
+  windowMessageListener.start();
+
   // start listen event for send request
   sendRequestListener.start();
 

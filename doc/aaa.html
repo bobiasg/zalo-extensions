@@ -5,17 +5,24 @@
 
     <script type="text/javascript">
       function sendMessageToExtension(message) {
-        window.postMessage({ message: message }, '*');
+        window.postMessage(
+          {
+            source: 'zalo_extension',
+            action: 'zaloSendRequest',
+            message: message,
+          },
+          '*',
+        );
       }
 
-      window.addEventListener('message', event => {
-        // Check the event origin to ensure it comes from the content script
-        if (event.data?.source !== 'zalo_extension') {
-          return;
-        }
-        // Handle the response message
-        console.log('Response from proxy script:event.data=', event.data);
-      });
+      // window.addEventListener('message', event => {
+      //   // Check the event origin to ensure it comes from the content script
+      //   if (event.data?.source !== 'zalo_extension') {
+      //     return;
+      //   }
+      //   // Handle the response message
+      //   console.log('Response from proxy script:event.data=', event.data);
+      // });
 
       var message = `Hôm nay Phan Gia Xanh có:
       Trái cây hữu cơ:
@@ -98,6 +105,29 @@
         //     requestId: '0948832001',
         //   });
         // }, 1000);
+
+        setTimeout(() => {
+          // window.zaloAddReceiveMessageListener(message => console.log(message));
+
+          // sendMessageToExtension({
+          //   type: 'send-message',
+          //   data: {
+          //     phone: '0948832001',
+          //     message: message,
+          //   },
+          //   requestId: '0948832001',
+          // });
+          window
+            .zaloSendMessage({
+              data: {
+                phone: '0948832001',
+                message: message,
+              },
+              requestId: '0948832001',
+            })
+            .then(result => console.log(result))
+            .catch(err => console.log(err));
+        }, 3000);
       });
     </script>
   </body>

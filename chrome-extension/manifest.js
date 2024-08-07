@@ -60,6 +60,12 @@ const manifest = Object.assign(
         run_at: 'document_end',
         // world: 'MAIN',
       },
+      {
+        matches: ['http://app.services.io.vn/*', 'http://localhost/*', 'http://127.0.0.1/*'],
+        js: ['proxy/helper.iife.js'],
+        run_at: 'document_start',
+        world: 'MAIN',
+      },
     ],
     // devtools_page: 'devtools/index.html',
     web_accessible_resources: [

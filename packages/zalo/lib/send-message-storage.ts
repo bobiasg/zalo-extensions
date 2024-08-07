@@ -37,7 +37,7 @@ export const zaloMessageStorage: ZaloMessageStorage = {
     await storage.set(info => {
       const updatedMessages = info.messages.map(message => {
         if (message.trackingId === trackingId) {
-          return { ...message, status };
+          return { ...message, status } as ZaloSendMessageRequest;
         }
         return message;
       });

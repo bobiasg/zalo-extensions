@@ -9,5 +9,5 @@
     },
     "types": ["chrome"]
   },
-  "include": ["lib", "zalo", "utils"]
+  "include": ["lib", "zalo", "utils", "connections/background-connector.ts"]
 }

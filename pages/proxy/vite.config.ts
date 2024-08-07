@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { ConfigEnv, defineConfig, UserConfig } from 'vite';
 import { resolve } from 'path';
 import { makeEntryPointPlugin, watchRebuildPlugin } from '@chrome-extension-boilerplate/hmr';
 
@@ -10,7 +10,7 @@ const utilsDir = resolve(rootDir, 'utils');
 const isDev = process.env.__DEV__ === 'true';
 const isProduction = !isDev;
 
-export default defineConfig({
+const commonConfig = {
   resolve: {
     alias: {
       '@lib': libDir,
@@ -39,4 +39,26 @@ export default defineConfig({
   define: {
     'process.env.NODE_ENV': isDev ? `"development"` : `"production"`,
   },
+} as UserConfig;
+
+const mainConfig = commonConfig as UserConfig;
+const proxyConfig = {
+  ...commonConfig,
+  build: {
+    ...commonConfig.build,
+    lib: {
+      formats: ['iife'],
+      entry: resolve(__dirname, 'utils/zalo-extension-helpers.ts'),
+      name: 'ProxyScript',
+      fileName: 'helper',
+    },
+  },
+} as UserConfig;
+
+export default defineConfig(({ mode }: ConfigEnv) => {
+  if (mode == 'proxy') {
+    return proxyConfig;
+  } else {
+    return mainConfig;
+  }
 });

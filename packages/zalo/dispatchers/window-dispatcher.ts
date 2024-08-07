@@ -1,10 +1,10 @@
-import { ZaloEventMessage } from '../models/zalo-event-message';
+import { ZaloEvent } from '../models/zalo-event-message';
 
 /**
  * dispatch message between regular context and extension context
  * @param message
  */
-const dispatch = (message: ZaloEventMessage) => {
+const dispatch = (message: ZaloEvent) => {
   if (window && 'postMessage' in window) {
     window.postMessage(message);
   }

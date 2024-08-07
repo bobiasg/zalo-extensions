@@ -1,5 +1,6 @@
 import React from 'react';
-import { ZaloSendMessageRequest, useZaloSendMessageStorage } from '@chrome-extension-boilerplate/zalo';
+import { useZaloSendMessageStorage } from '@chrome-extension-boilerplate/zalo';
+import { ZaloSendMessageRequest } from '@chrome-extension-boilerplate/zalo/models';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import Message from './Message';

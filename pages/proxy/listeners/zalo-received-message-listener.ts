@@ -1,4 +1,7 @@
-import { addListener, removeListener } from './background-connector';
+// listen event message from background
+// and send to regular site base on window messaging
+
+import { addListener, removeListener } from '../connections/background-connector';
 import { dispatch } from '@chrome-extension-boilerplate/zalo/dispatchers/window-dispatcher';
 import { ZaloReceivedMessageEvent } from '@chrome-extension-boilerplate/zalo/models';
 

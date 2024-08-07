@@ -32,7 +32,7 @@ const ensureCapturedComponent = async () => {
  */
 const dispatchMessageEvent = (message: ZaloMessage) => {
   const eventMessage = {
-    formUser: getUser(message.fromUid),
+    fromUser: getUser(message.fromUid),
     toUser: getGroup(message.toUid) || getUser(message.toUid),
     zaloMessage: message,
   } as ZaloMessageData;
@@ -88,7 +88,7 @@ const start = async () => {
     const [, message] = args;
     const zaloMessage = message as ZaloMessage;
 
-    if (zaloMessage.fromUid !== '') {
+    if (zaloMessage.fromUid !== '' && zaloMessage.fromUid !== '0' && zaloMessage.cmd !== -1) {
       dispatchMessageEvent(zaloMessage);
     }
 

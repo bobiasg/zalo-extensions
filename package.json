@@ -23,7 +23,8 @@
   "type": "module",
   "dependencies": {
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "zalo-extensions": "file:"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.268",

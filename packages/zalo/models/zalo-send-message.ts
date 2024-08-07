@@ -9,6 +9,10 @@ export class ZaloSendMessageResult {
   error: boolean = false;
   message?: string | null = null;
   zaloMessage: ZaloSendMessageRequest;
+  user: {
+    userStatus: 'friend' | 'user' | 'no_user' | '';
+    userInfo?: unknown;
+  } = { userStatus: '' };
 
   constructor(zaloMessage: ZaloSendMessageRequest) {
     this.zaloMessage = zaloMessage;
@@ -33,7 +37,7 @@ export class ZaloSendMessageResult {
 }
 
 export class ZaloSendMessageRequest {
-  trackingId: string | null = null;
+  trackingId: string;
   type: ZaloSendMessageRequestType;
   data: ZaloSendMessageData;
   status: 'pending' | 'success' | 'error';
@@ -41,7 +45,8 @@ export class ZaloSendMessageRequest {
   /**
    *
    */
-  constructor(data: ZaloSendMessageData, type: ZaloSendMessageRequestType = 'send-message') {
+  constructor(tracingId: string, data: ZaloSendMessageData, type: ZaloSendMessageRequestType = 'send-message') {
+    this.trackingId = tracingId;
     this.data = data;
     this.type = type;
     this.status = 'pending';

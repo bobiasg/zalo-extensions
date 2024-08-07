@@ -113,8 +113,24 @@ export interface ZaloMessage {
   z_parsedTokens?: unknown[];
 }
 
-export interface ZaloMessageData {
-  formUser: ZaloUser;
+export class ZaloMessageData {
+  fromUser?: ZaloUser;
   toUser: ZaloUser | ZaloGroup;
   zaloMessage: ZaloMessage;
+
+  /**
+   *
+   */
+  constructor(message: ZaloMessage, toUser: ZaloUser | ZaloGroup, fromUser?: ZaloUser) {
+    this.zaloMessage = message;
+    this.toUser = toUser;
+    this.fromUser = fromUser;
+  }
+
+  public static isValid(obj: unknown): obj is ZaloMessageData {
+    return (
+      obj instanceof ZaloMessageData ||
+      (typeof obj === 'object' && obj !== null && 'zaloMessage' in obj && 'toUser' in obj)
+    );
+  }
 }
