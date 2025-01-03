@@ -141,7 +141,7 @@ class ZaloSendMessageFlow {
       searchFriendInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       const itemSearchTitle = await waitForElementBySelector('[class="item-search__title"]');
-      const searchResultList = await waitForElement('global_search_list');
+      const searchResultList = await waitForElement('searchResultList');
       //get first item has class 'conv-item'
       const firstItem = searchResultList.querySelector('.conv-item');
       //TODO should check phone number again to make sure select right person

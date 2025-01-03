@@ -17,10 +17,11 @@ const stop = () => {
 
 function processMessageFromBackground(event: unknown) {
   // handle message from background
-  console.debug('proxy: received message from background:', event);
+
   const message = event as ZaloReceivedMessageEvent;
 
   if (ZaloReceivedMessageEvent.isValid(message)) {
+    console.debug('proxy: received message from background:', message);
     dispatch(message);
   }
 }
